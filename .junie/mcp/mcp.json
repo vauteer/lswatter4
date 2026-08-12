@@ -3,7 +3,7 @@
         "laravel-boost": {
             "command": "/Users/gerald/Library/Application Support/Herd/bin/php84",
             "args": [
-                "/Users/gerald/Herd/watter4/artisan",
+                "/Users/gerald/Herd/lswatter4/artisan",
                 "boost:mcp"
             ]
         }

@@ -34,17 +34,7 @@ return new class extends Migration
             $table->integer('finished_at')->nullable();
         });
 
-        Schema::create('failed_jobs', function (Blueprint $table) {
-            $table->id();
-            $table->string('uuid')->unique();
-            $table->string('connection');
-            $table->string('queue');
-            $table->longText('payload');
-            $table->longText('exception');
-            $table->timestamp('failed_at')->useCurrent();
-
-            $table->index(['connection', 'queue', 'failed_at']);
-        });
+        // failed_jobs table already exists (shared watter3 database)
     }
 
     /**
@@ -54,6 +44,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('jobs');
         Schema::dropIfExists('job_batches');
-        Schema::dropIfExists('failed_jobs');
     }
 };

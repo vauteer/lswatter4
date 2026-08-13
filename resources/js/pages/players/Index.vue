@@ -23,6 +23,9 @@ type PlayerRow = {
 type PaginatedPlayers = {
     data: PlayerRow[];
     links: { url: string | null; label: string; active: boolean }[];
+    from: number | null;
+    to: number | null;
+    total: number;
 };
 
 const props = defineProps<{
@@ -134,6 +137,20 @@ watch(search, (value) => {
             </table>
         </div>
 
-        <Pagination :links="players.links" />
+        <div
+            v-if="players.total > players.data.length"
+            class="flex items-center justify-center md:justify-between"
+        >
+            <p class="hidden text-sm text-muted-foreground md:block">
+                {{
+                    $t('Entries :from–:to of :total', {
+                        from: String(players.from ?? 0),
+                        to: String(players.to ?? 0),
+                        total: String(players.total),
+                    })
+                }}
+            </p>
+            <Pagination :links="players.links" />
+        </div>
     </div>
 </template>

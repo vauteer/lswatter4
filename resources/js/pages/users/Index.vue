@@ -25,6 +25,9 @@ type UserRow = Pick<User, 'id' | 'name' | 'email' | 'admin'> & {
 type PaginatedUsers = {
     data: UserRow[];
     links: { url: string | null; label: string; active: boolean }[];
+    from: number | null;
+    to: number | null;
+    total: number;
 };
 
 const props = defineProps<{
@@ -179,6 +182,20 @@ watch(search, (value) => {
             </table>
         </div>
 
-        <Pagination :links="users.links" />
+        <div
+            v-if="users.total > users.data.length"
+            class="flex items-center justify-center md:justify-between"
+        >
+            <p class="hidden text-sm text-muted-foreground md:block">
+                {{
+                    $t('Entries :from–:to of :total', {
+                        from: String(users.from ?? 0),
+                        to: String(users.to ?? 0),
+                        total: String(users.total),
+                    })
+                }}
+            </p>
+            <Pagination :links="users.links" />
+        </div>
     </div>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { LogIn, Pencil, Plus } from '@lucide/vue';
+import { trans } from 'laravel-vue-i18n';
 import { ref, watch } from 'vue';
 import ImpersonationController from '@/actions/App/Http/Controllers/ImpersonationController';
 import Heading from '@/components/Heading.vue';
@@ -33,7 +34,7 @@ const props = defineProps<{
 
 defineOptions({
     layout: {
-        breadcrumbs: [{ title: 'Users', href: index() }],
+        breadcrumbs: [{ title: trans('Users'), href: index() }],
     },
 });
 
@@ -49,18 +50,20 @@ watch(search, (value) => {
 </script>
 
 <template>
-    <Head title="Users" />
+    <Head :title="$t('Users')" />
 
     <div class="flex flex-col gap-6 p-4">
         <div class="flex items-center justify-between">
             <Heading
-                title="Users"
-                description="Manage the accounts that can access this application"
+                :title="$t('Users')"
+                :description="
+                    $t('Manage the accounts that can access this application')
+                "
             />
             <Button as-child>
                 <Link :href="create()">
                     <Plus class="size-4" />
-                    New user
+                    {{ $t('New user') }}
                 </Link>
             </Button>
         </div>
@@ -68,7 +71,7 @@ watch(search, (value) => {
         <Input
             v-model="search"
             type="search"
-            placeholder="Search by name or email"
+            :placeholder="$t('Name or email')"
             class="max-w-sm"
         />
 
@@ -80,11 +83,13 @@ watch(search, (value) => {
                     class="border-b border-sidebar-border/70 text-left text-muted-foreground dark:border-sidebar-border"
                 >
                     <tr>
-                        <th class="px-4 py-2 font-medium">Name</th>
-                        <th class="px-4 py-2 font-medium">Email</th>
-                        <th class="px-4 py-2 font-medium">Role</th>
+                        <th class="px-4 py-2 font-medium">{{ $t('Name') }}</th>
+                        <th class="px-4 py-2 font-medium">
+                            {{ $t('Email address') }}
+                        </th>
+                        <th class="px-4 py-2 font-medium">{{ $t('Role') }}</th>
                         <th class="px-4 py-2 text-right font-medium">
-                            Actions
+                            {{ $t('Actions') }}
                         </th>
                     </tr>
                 </thead>
@@ -94,7 +99,7 @@ watch(search, (value) => {
                             colspan="4"
                             class="px-4 py-6 text-center text-muted-foreground"
                         >
-                            No users found.
+                            {{ $t('No users found.') }}
                         </td>
                     </tr>
                     <tr
@@ -110,7 +115,7 @@ watch(search, (value) => {
                             <Badge
                                 :variant="user.admin ? 'default' : 'secondary'"
                             >
-                                {{ user.admin ? 'Admin' : 'User' }}
+                                {{ user.admin ? $t('Admin') : $t('User') }}
                             </Badge>
                         </td>
                         <td class="px-4 py-2">
@@ -129,15 +134,19 @@ watch(search, (value) => {
                                                     )
                                                 "
                                                 as="button"
-                                                :aria-label="`Log in as ${user.name}`"
+                                                :aria-label="
+                                                    $t('Log in as :name', {
+                                                        name: user.name,
+                                                    })
+                                                "
                                             >
                                                 <LogIn class="size-4" />
                                             </Link>
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent
-                                        >Log in as user</TooltipContent
-                                    >
+                                    <TooltipContent>{{
+                                        $t('Log in as user')
+                                    }}</TooltipContent>
                                 </Tooltip>
 
                                 <Tooltip v-if="user.modifiable">
@@ -149,13 +158,19 @@ watch(search, (value) => {
                                         >
                                             <Link
                                                 :href="edit(user.id)"
-                                                :aria-label="`Edit ${user.name}`"
+                                                :aria-label="
+                                                    $t('Edit :name', {
+                                                        name: user.name,
+                                                    })
+                                                "
                                             >
                                                 <Pencil class="size-4" />
                                             </Link>
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Edit user</TooltipContent>
+                                    <TooltipContent>{{
+                                        $t('Edit')
+                                    }}</TooltipContent>
                                 </Tooltip>
                             </div>
                         </td>

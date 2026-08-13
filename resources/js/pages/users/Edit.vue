@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import { computed, ref } from 'vue';
 import UserController from '@/actions/App/Http/Controllers/UserController';
 import Heading from '@/components/Heading.vue';
@@ -33,25 +34,27 @@ const props = defineProps<Props>();
 defineOptions({
     layout: {
         breadcrumbs: [
-            { title: 'Users', href: index() },
-            { title: 'Edit user', href: '' },
+            { title: trans('Users'), href: index() },
+            { title: trans('Edit user'), href: index() },
         ],
     },
 });
 
 const confirmingDeletion = ref(false);
 const deleteTooltip = computed(() =>
-    props.user.deletable ? 'Delete user' : "You can't delete this account",
+    props.user.deletable ? trans('Delete user') : trans('Cannot be deleted'),
 );
 </script>
 
 <template>
-    <Head title="Edit user" />
+    <Head :title="$t('Edit :name', { name: props.user.name })" />
 
     <div class="flex flex-col gap-6 p-4">
         <Heading
-            title="Edit user"
-            :description="`Update ${props.user.name}'s account`"
+            :title="$t('Edit user')"
+            :description="
+                $t('Update the account for :name', { name: props.user.name })
+            "
         />
 
         <Form
@@ -62,7 +65,7 @@ const deleteTooltip = computed(() =>
             <UserFormFields :user="props.user" :errors="errors" />
 
             <div class="flex items-center gap-4">
-                <Button :disabled="processing">Save</Button>
+                <Button :disabled="processing">{{ $t('Save') }}</Button>
             </div>
         </Form>
 
@@ -71,8 +74,12 @@ const deleteTooltip = computed(() =>
         >
             <Heading
                 variant="small"
-                title="Delete user"
-                description="Permanently remove this account. This cannot be undone."
+                :title="$t('Delete user')"
+                :description="
+                    $t(
+                        'Permanently remove this account. This cannot be undone.',
+                    )
+                "
             />
 
             <Tooltip>
@@ -83,7 +90,7 @@ const deleteTooltip = computed(() =>
                             :disabled="!props.user.deletable"
                             @click="confirmingDeletion = true"
                         >
-                            Delete user
+                            {{ $t('Delete user') }}
                         </Button>
                     </span>
                 </TooltipTrigger>
@@ -100,25 +107,28 @@ const deleteTooltip = computed(() =>
                         v-slot="{ processing }"
                     >
                         <DialogHeader>
-                            <DialogTitle
-                                >Delete {{ props.user.name }}?</DialogTitle
-                            >
+                            <DialogTitle>{{
+                                $t('Delete :name?', { name: props.user.name })
+                            }}</DialogTitle>
                             <DialogDescription>
-                                This will permanently delete the account. This
-                                action cannot be undone.
+                                {{
+                                    $t(
+                                        'This will permanently delete this user. This action cannot be undone.',
+                                    )
+                                }}
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter class="mt-4 gap-2">
                             <DialogClose as-child>
-                                <Button variant="outline" type="button"
-                                    >Cancel</Button
-                                >
+                                <Button variant="outline" type="button">{{
+                                    $t('Cancel')
+                                }}</Button>
                             </DialogClose>
                             <Button
                                 variant="destructive"
                                 :disabled="processing"
                             >
-                                Delete user
+                                {{ $t('Delete user') }}
                             </Button>
                         </DialogFooter>
                     </Form>

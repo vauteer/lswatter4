@@ -29,4 +29,30 @@ trait UserValidationRules
             'admin' => ['required', 'boolean'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function userMessages(): array
+    {
+        return [
+            'required' => __(':attribute is required.'),
+            'string' => __(':attribute must be a string.'),
+            'email' => __(':attribute must be a valid email address.'),
+            'email.unique' => __(':attribute is already in use.'),
+            'boolean' => __(':attribute must be true or false.'),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function userAttributes(): array
+    {
+        return [
+            'name' => __('Name'),
+            'email' => __('Email address'),
+            'admin' => __('Admin'),
+        ];
+    }
 }

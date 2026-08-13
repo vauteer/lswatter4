@@ -19,4 +19,20 @@ class UserStoreRequest extends FormRequest
     {
         return $this->userRules();
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->userMessages();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return $this->userAttributes();
+    }
 }

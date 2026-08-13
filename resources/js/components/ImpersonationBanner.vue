@@ -14,8 +14,12 @@ const impersonator = computed(() => page.props.auth.impersonator);
         class="flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-sm font-medium text-amber-950 dark:bg-amber-600 dark:text-amber-50"
     >
         <span>
-            Logged in as {{ page.props.auth.user.name }} — by
-            {{ impersonator.name }}
+            {{
+                $t('Logged in as :user — by :impersonator', {
+                    user: page.props.auth.user.name,
+                    impersonator: impersonator.name,
+                })
+            }}
         </span>
         <Link
             :href="ImpersonationController.destroy()"
@@ -23,7 +27,7 @@ const impersonator = computed(() => page.props.auth.impersonator);
             class="inline-flex items-center gap-1 underline hover:no-underline"
         >
             <UserRoundX class="size-4" />
-            Back to {{ impersonator.name }}
+            {{ $t('Back to :name', { name: impersonator.name }) }}
         </Link>
     </div>
 </template>

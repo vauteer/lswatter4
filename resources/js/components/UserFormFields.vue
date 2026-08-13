@@ -13,20 +13,20 @@ defineProps<{
 
 <template>
     <div class="grid gap-2">
-        <Label for="name">Name</Label>
+        <Label for="name">{{ $t('Name') }}</Label>
         <Input
             id="name"
             name="name"
             :default-value="user?.name"
             required
             autocomplete="name"
-            placeholder="Full name"
+            :placeholder="$t('Full name')"
         />
         <InputError :message="errors.name" />
     </div>
 
     <div class="grid gap-2">
-        <Label for="email">Email address</Label>
+        <Label for="email">{{ $t('Email address') }}</Label>
         <Input
             id="email"
             type="email"
@@ -34,7 +34,7 @@ defineProps<{
             :default-value="user?.email"
             required
             autocomplete="email"
-            placeholder="Email address"
+            :placeholder="$t('Email address')"
         />
         <InputError :message="errors.email" />
     </div>
@@ -48,7 +48,7 @@ defineProps<{
                 value="1"
                 :default-value="user?.admin ?? false"
             />
-            <Label for="admin" class="font-normal">Administrator</Label>
+            <Label for="admin" class="font-normal">{{ $t('Admin') }}</Label>
         </div>
         <InputError :message="errors.admin" />
     </div>

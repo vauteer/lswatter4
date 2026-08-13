@@ -29,7 +29,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password', 'profile_image'])]
+#[Fillable(['name', 'email', 'password', 'admin', 'profile_image'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -115,5 +115,10 @@ class User extends Authenticatable
     public function isUsed(): bool
     {
         return $this->tournaments()->count() > 0;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->admin;
     }
 }

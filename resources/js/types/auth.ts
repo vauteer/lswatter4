@@ -3,6 +3,7 @@ export type User = {
     name: string;
     email: string;
     avatar?: string;
+    admin: boolean;
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
@@ -11,6 +12,7 @@ export type User = {
 
 export type Auth = {
     user: User;
+    impersonator: Pick<User, 'id' | 'name'> | null;
 };
 
 /* @chisel-passkeys */

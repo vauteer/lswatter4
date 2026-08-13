@@ -11,7 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // users table already exists (shared watter3 database)
+        // The users table already exists in the shared watter3 database in
+        // production, but the testing sqlite connection has no such table,
+        // so it's created here only when missing (e.g. under `php artisan test`).
+        if (! Schema::hasTable('users')) {
+            Schema::create('users', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->timestamp('email_verified_at')->nullable();
+                $table->string('password');
+                $table->boolean('admin')->default(false);
+                $table->string('profile_image')->nullable();
+                $table->rememberToken();
+                $table->timestamps();
+            });
+        }
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

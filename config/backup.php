@@ -28,5 +28,8 @@ return [
         'job_batches',
         'failed_jobs',
         'sessions',
+        'telescope_entries',
+        'telescope_entries_tags',
+        'telescope_monitoring',
     ],
 ];

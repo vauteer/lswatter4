@@ -5,7 +5,6 @@ namespace App\Models;
 use App\ActionType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,9 +20,10 @@ use Illuminate\Support\Carbon;
  * @property int|null $table_type
  * @property int|null $row_id
  * @property string|null $old_values
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  */
 #[Fillable(['at', 'user_id', 'action_type', 'table_type', 'row_id', 'old_values'])]
-#[WithoutTimestamps]
 class Tracing extends Model
 {
     /** @use HasFactory<Factory<Tracing>> */

@@ -33,8 +33,6 @@ return new class extends Migration
             $table->integer('created_at');
             $table->integer('finished_at')->nullable();
         });
-
-        // failed_jobs table already exists (shared watter3 database)
     }
 
     /**

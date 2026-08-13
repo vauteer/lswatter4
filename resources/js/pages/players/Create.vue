@@ -1,41 +1,37 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
 import { trans } from 'laravel-vue-i18n';
-import UserController from '@/actions/App/Http/Controllers/UserController';
+import PlayerController from '@/actions/App/Http/Controllers/PlayerController';
 import Heading from '@/components/Heading.vue';
+import PlayerFormFields from '@/components/PlayerFormFields.vue';
 import { Button } from '@/components/ui/button';
-import UserFormFields from '@/components/UserFormFields.vue';
-import { create, index } from '@/routes/users';
+import { create, index } from '@/routes/players';
 
 defineOptions({
     layout: {
         breadcrumbs: [
-            { title: trans('Users'), href: index() },
-            { title: trans('New user'), href: create() },
+            { title: trans('Players'), href: index() },
+            { title: trans('New player'), href: create() },
         ],
     },
 });
 </script>
 
 <template>
-    <Head :title="$t('New user')" />
+    <Head :title="$t('New player')" />
 
     <div class="flex flex-col gap-6 p-4">
         <Heading
-            :title="$t('New user')"
-            :description="
-                $t(
-                    'Create a new account and email them a link to set their password',
-                )
-            "
+            :title="$t('New player')"
+            :description="$t('Add a new player')"
         />
 
         <Form
-            v-bind="UserController.store.form()"
+            v-bind="PlayerController.store.form()"
             class="max-w-xl space-y-6"
             v-slot="{ errors, processing }"
         >
-            <UserFormFields :errors="errors" />
+            <PlayerFormFields :errors="errors" />
 
             <div class="flex items-center gap-4">
                 <Button variant="outline" :disabled="processing">{{

@@ -2,8 +2,9 @@
 import { Form, Head, Link } from '@inertiajs/vue3';
 import { trans } from 'laravel-vue-i18n';
 import { ref } from 'vue';
-import UserController from '@/actions/App/Http/Controllers/UserController';
+import PlayerController from '@/actions/App/Http/Controllers/PlayerController';
 import Heading from '@/components/Heading.vue';
+import PlayerFormFields from '@/components/PlayerFormFields.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -19,12 +20,12 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import UserFormFields from '@/components/UserFormFields.vue';
-import { index } from '@/routes/users';
-import type { User } from '@/types';
+import { index } from '@/routes/players';
 
 type Props = {
-    user: Pick<User, 'id' | 'name' | 'email' | 'admin'> & {
+    player: {
+        id: number;
+        name: string;
         deletable: boolean;
     };
 };
@@ -34,8 +35,8 @@ const props = defineProps<Props>();
 defineOptions({
     layout: {
         breadcrumbs: [
-            { title: trans('Users'), href: index() },
-            { title: trans('Edit user'), href: index() },
+            { title: trans('Players'), href: index() },
+            { title: trans('Edit player'), href: index() },
         ],
     },
 });
@@ -44,25 +45,25 @@ const confirmingDeletion = ref(false);
 </script>
 
 <template>
-    <Head :title="$t('Edit :name', { name: props.user.name })" />
+    <Head :title="$t('Edit :name', { name: props.player.name })" />
 
     <div class="flex flex-col gap-6 p-4">
         <Heading
-            :title="$t('Edit user')"
+            :title="$t('Edit player')"
             :description="
-                $t('Update the account for :name', { name: props.user.name })
+                $t('Update the player :name', { name: props.player.name })
             "
         />
 
         <Form
-            v-bind="UserController.update.form(props.user.id)"
+            v-bind="PlayerController.update.form(props.player.id)"
             class="max-w-xl space-y-6"
             v-slot="{ errors, processing }"
         >
-            <UserFormFields :user="props.user" :errors="errors" />
+            <PlayerFormFields :player="props.player" :errors="errors" />
 
             <div class="flex items-center justify-between">
-                <Tooltip v-if="!props.user.deletable">
+                <Tooltip v-if="!props.player.deletable">
                     <TooltipTrigger as-child>
                         <span tabindex="0" class="inline-block">
                             <Button
@@ -105,17 +106,17 @@ const confirmingDeletion = ref(false);
         >
             <DialogContent>
                 <Form
-                    v-bind="UserController.destroy.form(props.user.id)"
+                    v-bind="PlayerController.destroy.form(props.player.id)"
                     v-slot="{ processing }"
                 >
                     <DialogHeader>
                         <DialogTitle>{{
-                            $t('Delete :name?', { name: props.user.name })
+                            $t('Delete :name?', { name: props.player.name })
                         }}</DialogTitle>
                         <DialogDescription>
                             {{
                                 $t(
-                                    'This will permanently delete this user. This action cannot be undone.',
+                                    'This will permanently delete this player. This action cannot be undone.',
                                 )
                             }}
                         </DialogDescription>

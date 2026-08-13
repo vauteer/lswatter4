@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { LogIn, Pencil, Plus } from '@lucide/vue';
+import { Pencil, Plus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { ref, watch } from 'vue';
-import ImpersonationController from '@/actions/App/Http/Controllers/ImpersonationController';
 import Heading from '@/components/Heading.vue';
 import Pagination from '@/components/Pagination.vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,27 +12,27 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { create, edit, index } from '@/routes/users';
-import type { User } from '@/types';
+import { create, edit, index } from '@/routes/players';
 
-type UserRow = Pick<User, 'id' | 'name' | 'email' | 'admin'> & {
-    impersonatable: boolean;
+type PlayerRow = {
+    id: number;
+    name: string;
     modifiable: boolean;
 };
 
-type PaginatedUsers = {
-    data: UserRow[];
+type PaginatedPlayers = {
+    data: PlayerRow[];
     links: { url: string | null; label: string; active: boolean }[];
 };
 
 const props = defineProps<{
-    users: PaginatedUsers;
+    players: PaginatedPlayers;
     filters: { search: string };
 }>();
 
 defineOptions({
     layout: {
-        breadcrumbs: [{ title: trans('Users'), href: index() }],
+        breadcrumbs: [{ title: trans('Players'), href: index() }],
     },
 });
 
@@ -50,20 +48,20 @@ watch(search, (value) => {
 </script>
 
 <template>
-    <Head :title="$t('Users')" />
+    <Head :title="$t('Players')" />
 
     <div class="flex flex-col gap-6 p-4">
         <div class="flex items-center justify-between">
             <Heading
-                :title="$t('Users')"
+                :title="$t('Players')"
                 :description="
-                    $t('Manage the accounts that can access this application')
+                    $t('Manage the players available for tournaments')
                 "
             />
             <Button as-child variant="outline">
                 <Link :href="create()">
                     <Plus class="size-4" />
-                    {{ $t('New user') }}
+                    {{ $t('New player') }}
                 </Link>
             </Button>
         </div>
@@ -71,7 +69,7 @@ watch(search, (value) => {
         <Input
             v-model="search"
             type="search"
-            :placeholder="$t('Name or email')"
+            :placeholder="$t('Name')"
             class="max-w-sm"
         />
 
@@ -84,43 +82,29 @@ watch(search, (value) => {
                 >
                     <tr>
                         <th class="px-4 py-2 font-medium">{{ $t('Name') }}</th>
-                        <th class="px-4 py-2 font-medium">
-                            {{ $t('Email address') }}
-                        </th>
-                        <th class="px-4 py-2 font-medium">{{ $t('Role') }}</th>
                         <th class="px-4 py-2 text-right font-medium">
                             {{ $t('Actions') }}
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-if="users.data.length === 0">
+                    <tr v-if="players.data.length === 0">
                         <td
-                            colspan="4"
+                            colspan="2"
                             class="px-4 py-6 text-center text-muted-foreground"
                         >
-                            {{ $t('No users found.') }}
+                            {{ $t('No players found.') }}
                         </td>
                     </tr>
                     <tr
-                        v-for="user in users.data"
-                        :key="user.id"
+                        v-for="player in players.data"
+                        :key="player.id"
                         class="border-b border-sidebar-border/70 last:border-0 dark:border-sidebar-border"
                     >
-                        <td class="px-4 py-2">{{ user.name }}</td>
-                        <td class="px-4 py-2 text-muted-foreground">
-                            {{ user.email }}
-                        </td>
-                        <td class="px-4 py-2">
-                            <Badge
-                                :variant="user.admin ? 'default' : 'secondary'"
-                            >
-                                {{ user.admin ? $t('Admin') : $t('User') }}
-                            </Badge>
-                        </td>
+                        <td class="px-4 py-2">{{ player.name }}</td>
                         <td class="px-4 py-2">
                             <div class="flex items-center justify-end gap-1">
-                                <Tooltip v-if="user.impersonatable">
+                                <Tooltip v-if="player.modifiable">
                                     <TooltipTrigger as-child>
                                         <Button
                                             variant="ghost"
@@ -128,39 +112,10 @@ watch(search, (value) => {
                                             as-child
                                         >
                                             <Link
-                                                :href="
-                                                    ImpersonationController.store(
-                                                        user.id,
-                                                    )
-                                                "
-                                                as="button"
-                                                :aria-label="
-                                                    $t('Log in as :name', {
-                                                        name: user.name,
-                                                    })
-                                                "
-                                            >
-                                                <LogIn class="size-4" />
-                                            </Link>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>{{
-                                        $t('Log in as user')
-                                    }}</TooltipContent>
-                                </Tooltip>
-
-                                <Tooltip v-if="user.modifiable">
-                                    <TooltipTrigger as-child>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon-sm"
-                                            as-child
-                                        >
-                                            <Link
-                                                :href="edit(user.id)"
+                                                :href="edit(player.id)"
                                                 :aria-label="
                                                     $t('Edit :name', {
-                                                        name: user.name,
+                                                        name: player.name,
                                                     })
                                                 "
                                             >
@@ -179,6 +134,6 @@ watch(search, (value) => {
             </table>
         </div>
 
-        <Pagination :links="users.links" />
+        <Pagination :links="players.links" />
     </div>
 </template>

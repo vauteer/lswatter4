@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Contact, LayoutGrid, Users } from '@lucide/vue';
+import { Contact, DatabaseBackup, LayoutGrid, Users } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -16,6 +16,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as backupsIndex } from '@/routes/backups';
 import { index as playersIndex } from '@/routes/players';
 import { index as usersIndex } from '@/routes/users';
 import type { NavItem } from '@/types';
@@ -42,6 +43,11 @@ const mainNavItems = computed<NavItem[]>(() => [
                   title: trans('Players'),
                   href: playersIndex(),
                   icon: Contact,
+              },
+              {
+                  title: trans('Backups'),
+                  href: backupsIndex(),
+                  icon: DatabaseBackup,
               },
           ]
         : []),

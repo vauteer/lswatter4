@@ -6,7 +6,7 @@
 - Don't generate code comments above the methods or code blocks if they are obvious. Don't add docblock comments when defining variables, unless instructed to, like `/** @var \App\Models\User $currentUser */`. Generate comments only for something that needs extra explanation for the reasons why that code was written.
 - For library documentation, if some library is not available in Laravel Boost 'search-docs', always use context7. Automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
 - If you made changes to CSS/Javascript files or added new Tailwind classes in Blade, run `npm run build` after all front-end changes are finished.
-- the prior version is in 'watter'. Use it for lookup
+- the prior version is in 'watter3'. Use it for lookup
 - the last project with AI was 'lscraft5'. Use it as inspiration. Use the same style.
 
 ---

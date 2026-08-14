@@ -137,11 +137,7 @@ function formatStart(start: string): string {
                             {{ tournament.creator }}
                         </td>
                         <td class="px-4 py-2">
-                            <Badge
-                                :variant="
-                                    tournament.private ? 'secondary' : 'default'
-                                "
-                            >
+                            <Badge variant="outline">
                                 {{
                                     tournament.private
                                         ? $t('Private')
@@ -198,6 +194,7 @@ function formatStart(start: string): string {
                                         $t('Edit')
                                     }}</TooltipContent>
                                 </Tooltip>
+                                <div v-else class="size-8" />
                             </div>
                         </td>
                     </tr>

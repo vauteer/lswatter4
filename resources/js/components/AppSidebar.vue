@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Contact, DatabaseBackup, LayoutGrid, Users } from '@lucide/vue';
+import {
+    Contact,
+    DatabaseBackup,
+    LayoutGrid,
+    Trophy,
+    Users,
+} from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -18,6 +24,7 @@ import {
 import { dashboard } from '@/routes';
 import { index as backupsIndex } from '@/routes/backups';
 import { index as playersIndex } from '@/routes/players';
+import { index as tournamentsIndex } from '@/routes/tournaments';
 import { index as usersIndex } from '@/routes/users';
 import type { NavItem } from '@/types';
 
@@ -31,6 +38,11 @@ const mainNavItems = computed<NavItem[]>(() => [
         title: trans('Dashboard'),
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: trans('Tournaments'),
+        href: tournamentsIndex(),
+        icon: Trophy,
     },
     ...(page.props.auth.user.admin
         ? [

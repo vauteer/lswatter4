@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Pencil, Plus } from '@lucide/vue';
+import { Eye, Pencil, Plus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
@@ -13,7 +13,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { create, edit, index } from '@/routes/tournaments';
+import { create, edit, index, show } from '@/routes/tournaments';
 
 type TournamentRow = {
     id: number;
@@ -122,7 +122,14 @@ function formatStart(start: string): string {
                         :key="tournament.id"
                         class="border-b border-sidebar-border/70 last:border-0 dark:border-sidebar-border"
                     >
-                        <td class="px-4 py-2">{{ tournament.name }}</td>
+                        <td class="px-4 py-2">
+                            <Link
+                                :href="show(tournament.id)"
+                                class="font-medium hover:underline"
+                            >
+                                {{ tournament.name }}
+                            </Link>
+                        </td>
                         <td class="px-4 py-2 text-muted-foreground">
                             {{ formatStart(tournament.start) }}
                         </td>
@@ -144,6 +151,30 @@ function formatStart(start: string): string {
                         </td>
                         <td class="px-4 py-2">
                             <div class="flex items-center justify-end gap-1">
+                                <Tooltip>
+                                    <TooltipTrigger as-child>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            as-child
+                                        >
+                                            <Link
+                                                :href="show(tournament.id)"
+                                                :aria-label="
+                                                    $t('Show :name', {
+                                                        name: tournament.name,
+                                                    })
+                                                "
+                                            >
+                                                <Eye class="size-4" />
+                                            </Link>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{{
+                                        $t('Show')
+                                    }}</TooltipContent>
+                                </Tooltip>
+
                                 <Tooltip v-if="tournament.modifiable">
                                     <TooltipTrigger as-child>
                                         <Button

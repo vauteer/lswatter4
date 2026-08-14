@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\FixtureController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\TournamentController;
@@ -15,6 +16,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('users', UserController::class)->except('show');
     Route::resource('players', PlayerController::class)->except('show');
     Route::resource('tournaments', TournamentController::class)->except('show');
+    Route::get('tournaments/{tournament}', [TournamentController::class, 'show'])->name('tournaments.show');
+    Route::get('tournaments/{tournament}/lists/{round}', [TournamentController::class, 'tableLists'])->name('tournaments.lists');
+
+    Route::get('fixtures/{fixture}/edit', [FixtureController::class, 'edit'])->name('fixtures.edit');
+    Route::put('fixtures/{fixture}', [FixtureController::class, 'update'])->name('fixtures.update');
 
     Route::get('backups', [BackupController::class, 'index'])->name('backups.index');
     Route::post('backups', [BackupController::class, 'store'])->name('backups.store');

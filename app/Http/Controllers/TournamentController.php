@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TournamentStoreRequest;
 use App\Http\Requests\TournamentUpdateRequest;
+use App\Http\Resources\FixtureResource;
 use App\Http\Resources\TournamentResource;
 use App\Models\Tournament;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,6 +35,38 @@ class TournamentController extends Controller
         return Inertia::render('tournaments/Index', [
             'tournaments' => $tournaments->through(fn (Tournament $tournament) => new TournamentResource($tournament)),
             'filters' => ['search' => $search],
+        ]);
+    }
+
+    /**
+     * Display the given tournament's fixtures and standings.
+     */
+    public function show(Request $request, Tournament $tournament): Response
+    {
+        Gate::authorize('view', $tournament);
+
+        $round = $request->integer('round') ?: $tournament->rounds;
+
+        return Inertia::render('tournaments/Show', [
+            'tournament' => new TournamentResource($tournament),
+            'currentRound' => $round,
+            'standings' => $tournament->standings(),
+            'fixtures' => FixtureResource::collection($tournament->fixtures()
+                ->where('round', $round)
+                ->orderBy('table_number')
+                ->get()),
+        ]);
+    }
+
+    /**
+     * Download the table lists for the given tournament round as a PDF.
+     */
+    public function tableLists(Tournament $tournament, int $round): HttpResponse
+    {
+        Gate::authorize('view', $tournament);
+
+        return new HttpResponse($tournament->tableLists($round)->Output(), 200, [
+            'Content-Type' => 'application/pdf',
         ]);
     }
 

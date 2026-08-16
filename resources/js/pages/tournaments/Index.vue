@@ -5,6 +5,7 @@ import { trans } from 'laravel-vue-i18n';
 import { computed, ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
 import Pagination from '@/components/Pagination.vue';
+import PlayerCombobox from '@/components/PlayerCombobox.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { create, edit, index, register, show } from '@/routes/tournaments';
+import type { SelectOption } from '@/types';
 
 type TournamentRow = {
     id: number;
@@ -36,7 +38,8 @@ type PaginatedTournaments = {
 
 const props = defineProps<{
     tournaments: PaginatedTournaments;
-    filters: { search: string };
+    filters: { search: string; player_id: number | null };
+    players: SelectOption[];
 }>();
 
 defineOptions({
@@ -53,11 +56,15 @@ const editQuery = computed(() => ({
 }));
 
 const search = ref(props.filters.search);
+const playerId = ref(props.filters.player_id);
 
-watch(search, (value) => {
+watch([search, playerId], ([searchValue, playerIdValue]) => {
     router.get(
         index.url(),
-        { search: value || undefined },
+        {
+            search: searchValue || undefined,
+            player_id: playerIdValue ?? undefined,
+        },
         { preserveState: true, preserveScroll: true, replace: true },
     );
 });
@@ -87,12 +94,21 @@ function formatStart(start: string): string {
             </Button>
         </div>
 
-        <Input
-            v-model="search"
-            type="search"
-            :placeholder="$t('Name')"
-            class="max-w-sm"
-        />
+        <div class="flex flex-wrap gap-2">
+            <Input
+                v-model="search"
+                type="search"
+                :placeholder="$t('Name')"
+                class="max-w-sm"
+            />
+            <PlayerCombobox
+                v-model="playerId"
+                :options="players"
+                :allow-create="false"
+                :placeholder="$t('Player')"
+                class="max-w-sm"
+            />
+        </div>
 
         <div
             class="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"

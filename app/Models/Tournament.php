@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -430,12 +429,10 @@ class Tournament extends Model
     #[Scope]
     protected function playedBy(Builder $query, int $playerId): void
     {
-        $query->whereIn('id', DB::table('tournaments')
-            ->join('team_tournament', 'tournaments.id', '=',
-                'team_tournament.tournament_id')
-            ->join('teams', 'teams.id', '=', 'team_tournament.team_id')
-            ->where('teams.player1_id', $playerId)
-            ->orWhere('teams.player2_id', $playerId)
-            ->pluck('tournaments.id'));
+        $query->where(fn (Builder $query) => $query
+            ->whereHas('players', fn (Builder $query) => $query->where('players.id', $playerId))
+            ->orWhereHas('teams', fn (Builder $query) => $query
+                ->where('teams.player1_id', $playerId)
+                ->orWhere('teams.player2_id', $playerId)));
     }
 }

@@ -12,18 +12,28 @@ import {
     ComboboxTrigger,
     ComboboxViewport,
 } from 'reka-ui';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { cn } from '@/lib/utils';
 import type { SelectOption } from '@/types';
 
-const props = defineProps<{
-    /** Hidden input name carrying the selected player's id. */
-    name: string;
-    /** Hidden input name carrying a not-yet-existing player's typed name. */
-    newNameField: string;
-    options: SelectOption[];
-    placeholder?: string;
-    class?: string;
+const props = withDefaults(
+    defineProps<{
+        /** Hidden input name carrying the selected player's id. Omit outside a form. */
+        name?: string;
+        /** Hidden input name carrying a not-yet-existing player's typed name. Omit outside a form. */
+        newNameField?: string;
+        options: SelectOption[];
+        placeholder?: string;
+        class?: string;
+        /** Whether typing a name with no match offers to create it. */
+        allowCreate?: boolean;
+        modelValue?: number | null;
+    }>(),
+    { allowCreate: true },
+);
+
+const emit = defineEmits<{
+    'update:modelValue': [value: number | null];
 }>();
 
 // This sentinel never reaches ComboboxRoot's own modelValue - selecting it
@@ -31,9 +41,16 @@ const props = defineProps<{
 // value distinguishable from every real (positive) player id.
 const CREATE_NEW_VALUE = -1;
 
-const selectedId = ref<number | null>(null);
+const selectedId = ref<number | null>(props.modelValue ?? null);
 const searchText = ref('');
 const newPlayerName = ref('');
+
+watch(
+    () => props.modelValue,
+    (value) => {
+        selectedId.value = value ?? null;
+    },
+);
 
 const displayValue = (value: unknown) => {
     if (value === null || value === undefined) {
@@ -55,12 +72,16 @@ const hasExactMatch = computed(() =>
 );
 
 const showCreateOption = computed(
-    () => searchText.value.trim() !== '' && !hasExactMatch.value,
+    () =>
+        props.allowCreate &&
+        searchText.value.trim() !== '' &&
+        !hasExactMatch.value,
 );
 
 const handleSelect = (value: unknown) => {
     selectedId.value = (value as number | null) ?? null;
     newPlayerName.value = '';
+    emit('update:modelValue', selectedId.value);
 };
 
 const handleCreateSelect = (event: Event) => {
@@ -73,6 +94,7 @@ function reset() {
     selectedId.value = null;
     searchText.value = '';
     newPlayerName.value = '';
+    emit('update:modelValue', null);
 }
 
 const hasValue = computed(
@@ -160,8 +182,18 @@ defineExpose({ reset });
             </ComboboxContent>
         </ComboboxPortal>
 
-        <input type="hidden" :name="name" :value="selectedId ?? ''" />
-        <input type="hidden" :name="newNameField" :value="newPlayerName" />
+        <input
+            v-if="name"
+            type="hidden"
+            :name="name"
+            :value="selectedId ?? ''"
+        />
+        <input
+            v-if="newNameField"
+            type="hidden"
+            :name="newNameField"
+            :value="newPlayerName"
+        />
         <p v-if="newPlayerName" class="text-xs text-muted-foreground">
             {{
                 $t('A new player ":name" will be created.', {

@@ -6,6 +6,7 @@ use App\Http\Requests\TournamentStoreRequest;
 use App\Http\Requests\TournamentUpdateRequest;
 use App\Http\Resources\FixtureResource;
 use App\Http\Resources\TournamentResource;
+use App\Models\Player;
 use App\Models\Tournament;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -27,10 +28,12 @@ class TournamentController extends Controller
         Gate::authorize('viewAny', Tournament::class);
 
         $search = $request->string('search')->trim()->toString();
+        $playerId = $request->integer('player_id') ?: null;
 
         $tournaments = Tournament::query()
             ->visibleTo($request->user())
             ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
+            ->when($playerId !== null, fn ($query) => $query->playedBy($playerId))
             ->orderByDesc('start')
             ->orderBy('id')
             ->paginate(self::PER_PAGE)
@@ -38,7 +41,8 @@ class TournamentController extends Controller
 
         return Inertia::render('tournaments/Index', [
             'tournaments' => $tournaments->through(fn (Tournament $tournament) => new TournamentResource($tournament)),
-            'filters' => ['search' => $search],
+            'filters' => ['search' => $search, 'player_id' => $playerId],
+            'players' => Player::orderBy('name')->get(['id', 'name']),
         ]);
     }
 

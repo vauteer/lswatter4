@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Form, Head, Link, router } from '@inertiajs/vue3';
-import { ChevronDown, Merge, Pencil, Plus, TriangleAlert } from '@lucide/vue';
+import {
+    ChevronDown,
+    Merge,
+    Pencil,
+    Plus,
+    TriangleAlert,
+    Trophy,
+} from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed, ref, watch } from 'vue';
 import PlayerController from '@/actions/App/Http/Controllers/PlayerController';
@@ -20,6 +27,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { create, edit, index } from '@/routes/players';
+import { index as tournamentsIndex } from '@/routes/tournaments';
 
 type PlayerRow = {
     id: number;
@@ -206,6 +214,37 @@ watch(search, (value) => {
                         <td class="px-4 py-2">{{ player.name }}</td>
                         <td class="px-4 py-2">
                             <div class="flex items-center justify-end gap-1">
+                                <Tooltip>
+                                    <TooltipTrigger as-child>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            as-child
+                                        >
+                                            <Link
+                                                :href="
+                                                    tournamentsIndex({
+                                                        query: {
+                                                            player_id:
+                                                                player.id,
+                                                        },
+                                                    })
+                                                "
+                                                :aria-label="
+                                                    $t(
+                                                        'Show tournaments played by :name',
+                                                        { name: player.name },
+                                                    )
+                                                "
+                                            >
+                                                <Trophy class="size-4" />
+                                            </Link>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{{
+                                        $t('Tournaments played')
+                                    }}</TooltipContent>
+                                </Tooltip>
                                 <Tooltip v-if="player.modifiable">
                                     <TooltipTrigger as-child>
                                         <Button

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Player;
 use App\Models\Team;
 use App\Models\Tournament;
 use App\Models\User;
@@ -34,6 +35,27 @@ test('the tournaments list reports whether registration is still open for each t
         ->where('tournaments.data.0.registrationOpen', true)
         ->where('tournaments.data.1.id', $started->id)
         ->where('tournaments.data.1.registrationOpen', false));
+});
+
+test('the tournaments list can be filtered by a player, whether registered individually or as part of a team', function () {
+    $admin = User::factory()->admin()->create();
+    $player = Player::factory()->create();
+
+    $individualTournament = Tournament::factory()->create(['start' => now()->subDay()]);
+    $individualTournament->players()->attach($player);
+
+    $team = Team::factory()->create(['player1_id' => $player->id]);
+    $teamTournament = Tournament::factory()->create(['start' => now()->subDays(2)]);
+    $teamTournament->teams()->attach($team);
+
+    Tournament::factory()->create(['start' => now()->subDays(3)]);
+
+    $response = $this->actingAs($admin)->get(route('tournaments.index', ['player_id' => $player->id]));
+
+    $response->assertInertia(fn ($page) => $page
+        ->has('tournaments.data', 2)
+        ->where('tournaments.data.0.id', $individualTournament->id)
+        ->where('tournaments.data.1.id', $teamTournament->id));
 });
 
 test('authenticated users can create a tournament', function () {

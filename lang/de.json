@@ -33,6 +33,7 @@
     "User deleted.": "Benutzer gelöscht.",
 
     "Players": "Spieler",
+    "Player": "Spieler",
     "Manage the players available for tournaments": "Verwalten Sie die Spieler, die für Turniere zur Verfügung stehen",
     "New player": "Neuer Spieler",
     "Add a new player": "Einen neuen Spieler hinzufügen",
@@ -51,6 +52,8 @@
     "Player created.": "Spieler erstellt.",
     "Player updated.": "Spieler aktualisiert.",
     "Player deleted.": "Spieler gelöscht.",
+    "Tournaments played": "Gespielte Turniere",
+    "Show tournaments played by :name": "Von :name gespielte Turniere anzeigen",
 
     "Tournaments": "Turniere",
     "Browse and manage tournaments": "Turniere durchsuchen und verwalten",

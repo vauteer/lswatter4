@@ -37,4 +37,9 @@ class PlayerPolicy
         // would silently corrupt that historical data.
         return ! $player->isUsed();
     }
+
+    public function merge(User $user): bool
+    {
+        return $user->isAdmin();
+    }
 }

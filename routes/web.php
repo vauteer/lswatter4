@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('users', UserController::class)->except('show');
     Route::resource('players', PlayerController::class)->except('show');
+    Route::post('players/merge', [PlayerController::class, 'mergeDuplicates'])->name('players.merge');
     Route::resource('tournaments', TournamentController::class)->except('show');
     Route::get('tournaments/{tournament}', [TournamentController::class, 'show'])->name('tournaments.show');
     Route::get('tournaments/{tournament}/lists/{round}', [TournamentController::class, 'tableLists'])->name('tournaments.lists');

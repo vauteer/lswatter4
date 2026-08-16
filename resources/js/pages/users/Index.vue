@@ -2,7 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { LogIn, Pencil, Plus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import ImpersonationController from '@/actions/App/Http/Controllers/ImpersonationController';
 import Heading from '@/components/Heading.vue';
 import Pagination from '@/components/Pagination.vue';
@@ -28,6 +28,7 @@ type PaginatedUsers = {
     from: number | null;
     to: number | null;
     total: number;
+    current_page: number;
 };
 
 const props = defineProps<{
@@ -40,6 +41,13 @@ defineOptions({
         breadcrumbs: [{ title: trans('Users'), href: index() }],
     },
 });
+
+// So the edit page's Cancel button can return here instead of resetting
+// to the first, unfiltered page.
+const editQuery = computed(() => ({
+    page: props.users.current_page,
+    search: props.filters.search || undefined,
+}));
 
 const search = ref(props.filters.search);
 
@@ -160,7 +168,11 @@ watch(search, (value) => {
                                             as-child
                                         >
                                             <Link
-                                                :href="edit(user.id)"
+                                                :href="
+                                                    edit(user.id, {
+                                                        query: editQuery,
+                                                    })
+                                                "
                                                 :aria-label="
                                                     $t('Edit :name', {
                                                         name: user.name,

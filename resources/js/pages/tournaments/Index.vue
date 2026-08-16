@@ -2,7 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ListOrdered, Pencil, Plus, UserPlus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
 import Pagination from '@/components/Pagination.vue';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,7 @@ type PaginatedTournaments = {
     from: number | null;
     to: number | null;
     total: number;
+    current_page: number;
 };
 
 const props = defineProps<{
@@ -43,6 +44,13 @@ defineOptions({
         breadcrumbs: [{ title: trans('Tournaments'), href: index() }],
     },
 });
+
+// So the edit page's Cancel button can return here instead of resetting
+// to the first, unfiltered page.
+const editQuery = computed(() => ({
+    page: props.tournaments.current_page,
+    search: props.filters.search || undefined,
+}));
 
 const search = ref(props.filters.search);
 
@@ -211,7 +219,11 @@ function formatStart(start: string): string {
                                             as-child
                                         >
                                             <Link
-                                                :href="edit(tournament.id)"
+                                                :href="
+                                                    edit(tournament.id, {
+                                                        query: editQuery,
+                                                    })
+                                                "
                                                 :aria-label="
                                                     $t('Edit :name', {
                                                         name: tournament.name,

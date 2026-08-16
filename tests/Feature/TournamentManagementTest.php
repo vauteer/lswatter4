@@ -48,7 +48,7 @@ test('authenticated users can create a tournament', function () {
         'private' => false,
     ]);
 
-    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index'));
+    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index', ['page' => 1]));
 
     $this->assertDatabaseHas('tournaments', [
         'name' => 'Spring Open',
@@ -83,9 +83,50 @@ test('creators can update their own tournament', function () {
         'private' => false,
     ]);
 
-    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index'));
+    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index', ['page' => 1]));
 
     expect($tournament->refresh()->name)->toBe('Updated Name');
+});
+
+test('updating a tournament redirects to the page it appears on', function () {
+    $admin = User::factory()->admin()->create();
+    for ($i = 1; $i <= 20; $i++) {
+        Tournament::factory()->create(['start' => now()->addDays(21 - $i)]);
+    }
+    $tournament = Tournament::factory()->create(['start' => now(), 'created_by' => $admin->id]);
+
+    $response = $this->actingAs($admin)->put(route('tournaments.update', $tournament), [
+        'name' => 'Updated',
+        'start' => $tournament->start->format('Y-m-d H:i'),
+        'rounds' => $tournament->rounds,
+        'games' => $tournament->games,
+        'winpoints' => $tournament->winpoints,
+        'private' => $tournament->private,
+    ]);
+
+    $response->assertRedirect(route('tournaments.index', ['page' => 2]));
+});
+
+test('the edit page reports which page and search to return to on cancel', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+
+    $response = $this->actingAs($user)->get(route('tournaments.edit', $tournament).'?page=2&search=open');
+
+    $response->assertInertia(fn ($page) => $page
+        ->where('backPage', 2)
+        ->where('backSearch', 'open'));
+});
+
+test('the edit page reports no page or search to return to when opened directly', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+
+    $response = $this->actingAs($user)->get(route('tournaments.edit', $tournament));
+
+    $response->assertInertia(fn ($page) => $page
+        ->where('backPage', null)
+        ->where('backSearch', null));
 });
 
 test('the edit page reports whether the tournament has started', function () {
@@ -113,7 +154,7 @@ test('rounds, games, and winpoints can still be changed on a drawn but not yet s
         'private' => $tournament->private,
     ]);
 
-    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index'));
+    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index', ['page' => 1]));
     expect($tournament->refresh()->rounds)->toBe(4);
     expect($tournament->drawn())->toBeFalse();
     expect(session('inertia.flash_data')['toast'])->toBe([
@@ -206,7 +247,7 @@ test('admins can update any tournament', function () {
         'private' => false,
     ]);
 
-    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index'));
+    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index', ['page' => 1]));
 
     expect($tournament->refresh()->name)->toBe('Admin Update');
 });
@@ -217,7 +258,7 @@ test('creators can delete their own tournament', function () {
 
     $response = $this->actingAs($user)->delete(route('tournaments.destroy', $tournament));
 
-    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index'));
+    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index', ['page' => 1]));
 
     expect($tournament->fresh())->toBeNull();
 });
@@ -238,7 +279,7 @@ test('admins can delete any tournament', function () {
 
     $response = $this->actingAs($admin)->delete(route('tournaments.destroy', $tournament));
 
-    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index'));
+    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index', ['page' => 1]));
 
     expect($tournament->fresh())->toBeNull();
 });

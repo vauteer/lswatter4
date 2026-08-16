@@ -34,9 +34,18 @@ type Props = {
         deletable: boolean;
     };
     started: boolean;
+    backPage: number | null;
+    backSearch: string | null;
 };
 
 const props = defineProps<Props>();
+
+const cancelHref = index({
+    query: {
+        page: props.backPage ?? undefined,
+        search: props.backSearch ?? undefined,
+    },
+});
 
 defineOptions({
     layout: {
@@ -106,7 +115,7 @@ const confirmingDeletion = ref(false);
                         $t('Save')
                     }}</Button>
                     <Button variant="ghost" as-child>
-                        <Link :href="index()">{{ $t('Cancel') }}</Link>
+                        <Link :href="cancelHref">{{ $t('Cancel') }}</Link>
                     </Button>
                 </div>
             </div>

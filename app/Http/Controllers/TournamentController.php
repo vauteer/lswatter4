@@ -7,6 +7,7 @@ use App\Http\Requests\TournamentUpdateRequest;
 use App\Http\Resources\FixtureResource;
 use App\Http\Resources\TournamentResource;
 use App\Models\Tournament;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -16,6 +17,8 @@ use Inertia\Response;
 
 class TournamentController extends Controller
 {
+    private const int PER_PAGE = 15;
+
     /**
      * Display a listing of the tournaments.
      */
@@ -29,7 +32,8 @@ class TournamentController extends Controller
             ->visibleTo($request->user())
             ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
             ->orderByDesc('start')
-            ->paginate(15)
+            ->orderBy('id')
+            ->paginate(self::PER_PAGE)
             ->withQueryString();
 
         return Inertia::render('tournaments/Index', [
@@ -110,26 +114,28 @@ class TournamentController extends Controller
     {
         Gate::authorize('create', Tournament::class);
 
-        Tournament::create([
+        $tournament = Tournament::create([
             ...$request->validated(),
             'created_by' => $request->user()->id,
         ]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Tournament created.')]);
 
-        return to_route('tournaments.index');
+        return to_route('tournaments.index', ['page' => $this->pageOf($tournament, $request->user())]);
     }
 
     /**
      * Show the form for editing the given tournament.
      */
-    public function edit(Tournament $tournament): Response
+    public function edit(Request $request, Tournament $tournament): Response
     {
         Gate::authorize('update', $tournament);
 
         return Inertia::render('tournaments/Edit', [
             'tournament' => new TournamentResource($tournament),
             'started' => $tournament->started(),
+            'backPage' => $request->integer('page') ?: null,
+            'backSearch' => $request->string('search')->trim()->toString() ?: null,
         ]);
     }
 
@@ -158,20 +164,47 @@ class TournamentController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
 
-        return to_route('tournaments.index');
+        return to_route('tournaments.index', ['page' => $this->pageOf($tournament, $request->user())]);
     }
 
     /**
      * Remove the given tournament.
      */
-    public function destroy(Tournament $tournament): RedirectResponse
+    public function destroy(Request $request, Tournament $tournament): RedirectResponse
     {
         Gate::authorize('delete', $tournament);
+
+        $page = $this->pageOf($tournament, $request->user());
 
         $tournament->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Tournament deleted.')]);
 
-        return to_route('tournaments.index');
+        return to_route('tournaments.index', ['page' => min($page, $this->lastPage($request->user()))]);
+    }
+
+    /**
+     * The index page on which the given tournament appears.
+     */
+    private function pageOf(Tournament $tournament, ?User $user): int
+    {
+        $position = Tournament::query()
+            ->visibleTo($user)
+            ->where(fn ($query) => $query
+                ->where('start', '>', $tournament->start)
+                ->orWhere(fn ($query) => $query
+                    ->where('start', $tournament->start)
+                    ->where('id', '<=', $tournament->id)))
+            ->count();
+
+        return max(1, (int) ceil($position / self::PER_PAGE));
+    }
+
+    /**
+     * The last page of the tournaments index.
+     */
+    private function lastPage(?User $user): int
+    {
+        return max(1, (int) ceil(Tournament::query()->visibleTo($user)->count() / self::PER_PAGE));
     }
 }

@@ -17,6 +17,8 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
+    private const int PER_PAGE = 15;
+
     /**
      * Display a listing of the users.
      */
@@ -32,7 +34,8 @@ class UserController extends Controller
                     ->orWhere('email', 'like', "%{$search}%");
             }))
             ->orderBy('name')
-            ->paginate(15)
+            ->orderBy('id')
+            ->paginate(self::PER_PAGE)
             ->withQueryString();
 
         return Inertia::render('users/Index', [
@@ -67,18 +70,20 @@ class UserController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User created.')]);
 
-        return to_route('users.index');
+        return to_route('users.index', ['page' => $this->pageOf($user)]);
     }
 
     /**
      * Show the form for editing the given user.
      */
-    public function edit(User $user): Response
+    public function edit(Request $request, User $user): Response
     {
         Gate::authorize('update', $user);
 
         return Inertia::render('users/Edit', [
             'user' => new UserResource($user),
+            'backPage' => $request->integer('page') ?: null,
+            'backSearch' => $request->string('search')->trim()->toString() ?: null,
         ]);
     }
 
@@ -99,7 +104,7 @@ class UserController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User updated.')]);
 
-        return to_route('users.index');
+        return to_route('users.index', ['page' => $this->pageOf($user)]);
     }
 
     /**
@@ -109,10 +114,35 @@ class UserController extends Controller
     {
         Gate::authorize('delete', $user);
 
+        $page = $this->pageOf($user);
+
         $user->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User deleted.')]);
 
-        return to_route('users.index');
+        return to_route('users.index', ['page' => min($page, $this->lastPage())]);
+    }
+
+    /**
+     * The index page on which the given user appears.
+     */
+    private function pageOf(User $user): int
+    {
+        $position = User::query()
+            ->where('name', '<', $user->name)
+            ->orWhere(fn ($query) => $query
+                ->where('name', $user->name)
+                ->where('id', '<=', $user->id))
+            ->count();
+
+        return max(1, (int) ceil($position / self::PER_PAGE));
+    }
+
+    /**
+     * The last page of the users index.
+     */
+    private function lastPage(): int
+    {
+        return max(1, (int) ceil(User::count() / self::PER_PAGE));
     }
 }

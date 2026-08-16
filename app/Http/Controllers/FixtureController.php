@@ -31,6 +31,7 @@ class FixtureController extends Controller
                 'team2' => (string) $fixture->team2,
             ],
             'placeholder' => $this->placeholder($tournament),
+            'gamesNeeded' => $tournament->games,
         ]);
     }
 

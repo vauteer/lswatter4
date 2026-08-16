@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
+import { X } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
+import { ref } from 'vue';
 import FixtureController from '@/actions/App/Http/Controllers/FixtureController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -19,6 +21,7 @@ type Props = {
         team2: string;
     };
     placeholder: string;
+    gamesNeeded: number;
 };
 
 const props = defineProps<Props>();
@@ -35,6 +38,8 @@ defineOptions({
         ],
     },
 });
+
+const score = ref(props.fixture.score ?? '');
 </script>
 
 <template>
@@ -58,14 +63,33 @@ defineOptions({
         >
             <div class="grid gap-2">
                 <Label for="score">{{ $t('Result') }}</Label>
-                <Input
-                    id="score"
-                    name="score"
-                    :default-value="fixture.score ?? ''"
-                    autocomplete="off"
-                    autofocus
-                    :placeholder="placeholder"
-                />
+                <p class="text-sm text-muted-foreground">
+                    {{
+                        $t(':count games needed', {
+                            count: String(gamesNeeded),
+                        })
+                    }}
+                </p>
+                <div class="relative">
+                    <Input
+                        id="score"
+                        name="score"
+                        v-model="score"
+                        autocomplete="off"
+                        autofocus
+                        :placeholder="placeholder"
+                        class="pr-9"
+                    />
+                    <button
+                        v-if="score"
+                        type="button"
+                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                        :aria-label="$t('Clear result')"
+                        @click="score = ''"
+                    >
+                        <X class="size-4" />
+                    </button>
+                </div>
                 <InputError :message="errors.score" />
             </div>
 

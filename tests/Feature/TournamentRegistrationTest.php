@@ -156,3 +156,153 @@ test('admins can register participants for any tournament', function () {
 
     $response->assertSessionHasNoErrors();
 });
+
+function startedTournament(User $user): Tournament
+{
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+
+    for ($i = 0; $i < 4; $i++) {
+        $tournament->teams()->attach(Team::factory()->create());
+    }
+
+    $tournament->draw();
+    $tournament->fixtures()->first()->update(['score' => '11-5 11-5 11-5 11-5']);
+
+    return $tournament;
+}
+
+test('the registration page reports registration as closed once the tournament has started', function () {
+    $user = User::factory()->create();
+    $tournament = startedTournament($user);
+
+    $this->actingAs($user)->get(route('tournaments.register', $tournament))
+        ->assertInertia(fn ($page) => $page->where('tournament.registrationOpen', false));
+});
+
+test('registering a player is rejected once the tournament has started', function () {
+    $user = User::factory()->create();
+    $tournament = startedTournament($user);
+
+    $response = $this->actingAs($user)->post(route('tournaments.register.store', $tournament), [
+        'new_player1_name' => 'Jane Doe',
+    ]);
+
+    $response->assertStatus(422);
+});
+
+test('joining players is rejected once the tournament has started', function () {
+    $user = User::factory()->create();
+    $tournament = startedTournament($user);
+    $player1 = Player::factory()->create();
+    $player2 = Player::factory()->create();
+    $tournament->players()->attach([$player1->id, $player2->id]);
+
+    $response = $this->actingAs($user)->post(route('tournaments.register.join', $tournament), [
+        'player_ids' => [$player1->id, $player2->id],
+    ]);
+
+    $response->assertStatus(422);
+});
+
+test('unregistering a player is rejected once the tournament has started', function () {
+    $user = User::factory()->create();
+    $tournament = startedTournament($user);
+    $player = Player::factory()->create();
+    $tournament->players()->attach($player);
+
+    $response = $this->actingAs($user)->delete(route('tournaments.register.players.destroy', [$tournament, $player]));
+
+    $response->assertStatus(422);
+    expect($tournament->players()->count())->toBe(1);
+});
+
+test('unregistering a team is rejected once the tournament has started', function () {
+    $user = User::factory()->create();
+    $tournament = startedTournament($user);
+    $team = $tournament->teams()->first();
+
+    $response = $this->actingAs($user)->delete(route('tournaments.register.teams.destroy', [$tournament, $team]));
+
+    $response->assertStatus(422);
+    expect($tournament->teams()->whereKey($team->id)->exists())->toBeTrue();
+});
+
+function drawnTournamentFor(User $user): Tournament
+{
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+
+    for ($i = 0; $i < 4; $i++) {
+        $tournament->teams()->attach(Team::factory()->create());
+    }
+
+    $tournament->draw();
+
+    return $tournament;
+}
+
+test('registering a single player after the draw discards it, with a note on the toast', function () {
+    $user = User::factory()->create();
+    $tournament = drawnTournamentFor($user);
+
+    $response = $this->actingAs($user)->post(route('tournaments.register.store', $tournament), [
+        'new_player1_name' => 'Jane Doe',
+    ]);
+
+    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.register', $tournament));
+    expect($tournament->drawn())->toBeFalse();
+    expect(session('inertia.flash_data')['toast'])->toBe([
+        'type' => 'success',
+        'message' => __(':name registered.', ['name' => 'Jane Doe']).' '.__('The existing draw was discarded because the roster changed.'),
+    ]);
+});
+
+test('registering a team after the draw discards it', function () {
+    $user = User::factory()->create();
+    $tournament = drawnTournamentFor($user);
+    $player1 = Player::factory()->create();
+    $player2 = Player::factory()->create();
+
+    $response = $this->actingAs($user)->post(route('tournaments.register.store', $tournament), [
+        'player1_id' => $player1->id,
+        'player2_id' => $player2->id,
+    ]);
+
+    $response->assertSessionHasNoErrors();
+    expect($tournament->drawn())->toBeFalse();
+});
+
+test('joining players into a team after the draw discards it', function () {
+    $user = User::factory()->create();
+    $tournament = drawnTournamentFor($user);
+    $player1 = Player::factory()->create();
+    $player2 = Player::factory()->create();
+    $tournament->players()->attach([$player1->id, $player2->id]);
+
+    $response = $this->actingAs($user)->post(route('tournaments.register.join', $tournament), [
+        'player_ids' => [$player1->id, $player2->id],
+    ]);
+
+    $response->assertSessionHasNoErrors();
+    expect($tournament->drawn())->toBeFalse();
+    expect(session('inertia.flash_data')['toast'])->toBe([
+        'type' => 'success',
+        'message' => __(':player1 and :player2 joined into a team.', [
+            'player1' => $player1->name,
+            'player2' => $player2->name,
+        ]).' '.__('The existing draw was discarded because the roster changed.'),
+    ]);
+});
+
+test('registering a player before any draw does not mention a discarded draw', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)->post(route('tournaments.register.store', $tournament), [
+        'new_player1_name' => 'Jane Doe',
+    ]);
+
+    expect(session('inertia.flash_data')['toast'])->toBe([
+        'type' => 'success',
+        'message' => __(':name registered.', ['name' => 'Jane Doe']),
+    ]);
+});

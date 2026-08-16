@@ -37,6 +37,7 @@ class TournamentResource extends JsonResource
             'creator' => $this->creator->name,
             'modifiable' => $request->user()->can('update', $this->resource),
             'deletable' => $request->user()->can('delete', $this->resource),
+            'registrationOpen' => $this->registrationOpen(),
         ];
     }
 }

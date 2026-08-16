@@ -21,7 +21,7 @@ type TeamRow = {
 };
 
 defineProps<{
-    tournament: { id: number; name: string };
+    tournament: { id: number; name: string; registrationOpen: boolean };
     players: SelectOption[];
     teams: TeamRow[];
     allPlayers: SelectOption[];
@@ -78,6 +78,7 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
         </div>
 
         <div
+            v-if="tournament.registrationOpen"
             class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
         >
             <Heading
@@ -126,6 +127,16 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                     <Button :disabled="processing">{{ $t('Register') }}</Button>
                 </div>
             </Form>
+        </div>
+        <div
+            v-else
+            class="rounded-xl border border-sidebar-border/70 p-4 text-sm text-muted-foreground dark:border-sidebar-border"
+        >
+            {{
+                $t(
+                    'Registration is closed because the tournament has already started.',
+                )
+            }}
         </div>
 
         <div
@@ -203,6 +214,7 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                         <td class="px-4 py-2">
                             <div class="flex items-center justify-end">
                                 <ConfirmActionDialog
+                                    v-if="tournament.registrationOpen"
                                     :action="
                                         TournamentRegistrationController.destroyTeam.form(
                                             {
@@ -275,6 +287,7 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                         >
                             <td class="px-4 py-2">
                                 <Checkbox
+                                    v-if="tournament.registrationOpen"
                                     name="player_ids[]"
                                     :value="player.id"
                                     :model-value="
@@ -295,6 +308,7 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                             <td class="px-4 py-2">
                                 <div class="flex items-center justify-end">
                                     <ConfirmActionDialog
+                                        v-if="tournament.registrationOpen"
                                         :action="
                                             TournamentRegistrationController.destroyPlayer.form(
                                                 {
@@ -332,7 +346,10 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                 </table>
             </div>
 
-            <div class="mt-4 flex items-center gap-4">
+            <div
+                v-if="tournament.registrationOpen"
+                class="mt-4 flex items-center gap-4"
+            >
                 <Button
                     type="submit"
                     variant="outline"

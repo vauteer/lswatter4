@@ -48,6 +48,7 @@ class TournamentRegistrationController extends Controller
     public function store(TournamentRegisterRequest $request, Tournament $tournament): RedirectResponse
     {
         Gate::authorize('update', $tournament);
+        abort_unless($tournament->registrationOpen(), 422);
 
         $data = $request->validated();
 
@@ -64,7 +65,8 @@ class TournamentRegistrationController extends Controller
         if (! $hasSecondPlayer) {
             $tournament->players()->attach($player1);
 
-            Inertia::flash('toast', ['type' => 'success', 'message' => __(':name registered.', ['name' => $player1->name])]);
+            $message = $this->discardDrawIfNeeded($tournament, __(':name registered.', ['name' => $player1->name]));
+            Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
 
             return to_route('tournaments.register', $tournament);
         }
@@ -86,7 +88,8 @@ class TournamentRegistrationController extends Controller
         $team = Team::findOrCreateForPlayers($player1, $player2);
         $tournament->teams()->attach($team);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Team :team registered.', ['team' => (string) $team])]);
+        $message = $this->discardDrawIfNeeded($tournament, __('Team :team registered.', ['team' => (string) $team]));
+        Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
 
         return to_route('tournaments.register', $tournament);
     }
@@ -97,6 +100,7 @@ class TournamentRegistrationController extends Controller
     public function join(TournamentJoinRequest $request, Tournament $tournament): RedirectResponse
     {
         Gate::authorize('update', $tournament);
+        abort_unless($tournament->registrationOpen(), 422);
 
         [$player1Id, $player2Id] = $request->validated('player_ids');
 
@@ -118,10 +122,11 @@ class TournamentRegistrationController extends Controller
         $tournament->players()->detach([$player1->id, $player2->id]);
         $tournament->teams()->syncWithoutDetaching($team);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __(':player1 and :player2 joined into a team.', [
+        $message = $this->discardDrawIfNeeded($tournament, __(':player1 and :player2 joined into a team.', [
             'player1' => $player1->name,
             'player2' => $player2->name,
-        ])]);
+        ]));
+        Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
 
         return to_route('tournaments.register', $tournament);
     }
@@ -132,6 +137,7 @@ class TournamentRegistrationController extends Controller
     public function destroyPlayer(Tournament $tournament, Player $player): RedirectResponse
     {
         Gate::authorize('update', $tournament);
+        abort_unless($tournament->registrationOpen(), 422);
 
         $tournament->players()->detach($player);
 
@@ -146,12 +152,30 @@ class TournamentRegistrationController extends Controller
     public function destroyTeam(Tournament $tournament, Team $team): RedirectResponse
     {
         Gate::authorize('update', $tournament);
+        abort_unless($tournament->registrationOpen(), 422);
 
         $tournament->teams()->detach($team);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Team :team unregistered.', ['team' => (string) $team])]);
 
         return to_route('tournaments.register', $tournament);
+    }
+
+    /**
+     * If the tournament has already been drawn, the newly changed
+     * roster no longer matches those fixtures, so discard them and
+     * note it on the success message rather than asking first - the
+     * roster change itself was the deliberate action here.
+     */
+    private function discardDrawIfNeeded(Tournament $tournament, string $message): string
+    {
+        if (! $tournament->drawn()) {
+            return $message;
+        }
+
+        $tournament->discardDraw();
+
+        return $message.' '.__('The existing draw was discarded because the roster changed.');
     }
 
     private function resolvePlayer(?int $id, ?string $newName): Player

@@ -33,6 +33,7 @@ type Props = {
         private: boolean;
         deletable: boolean;
     };
+    started: boolean;
 };
 
 const props = defineProps<Props>();
@@ -70,6 +71,7 @@ const confirmingDeletion = ref(false);
             <TournamentFormFields
                 :tournament="props.tournament"
                 :errors="errors"
+                :format-locked="props.started"
             />
 
             <div class="flex items-center justify-between">

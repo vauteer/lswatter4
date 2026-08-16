@@ -19,6 +19,8 @@ defineProps<{
             string
         >
     >;
+    /** Rounds/games/winpoints can no longer change once play has started. */
+    formatLocked?: boolean;
 }>();
 </script>
 
@@ -58,6 +60,8 @@ defineProps<{
                 min="2"
                 max="9"
                 :default-value="tournament?.rounds ?? 3"
+                :readonly="formatLocked"
+                :class="formatLocked ? 'bg-muted' : ''"
                 required
             />
             <InputError :message="errors.rounds" />
@@ -72,6 +76,8 @@ defineProps<{
                 min="2"
                 max="9"
                 :default-value="tournament?.games ?? 4"
+                :readonly="formatLocked"
+                :class="formatLocked ? 'bg-muted' : ''"
                 required
             />
             <InputError :message="errors.games" />
@@ -86,11 +92,20 @@ defineProps<{
                 min="11"
                 max="21"
                 :default-value="tournament?.winpoints ?? 11"
+                :readonly="formatLocked"
+                :class="formatLocked ? 'bg-muted' : ''"
                 required
             />
             <InputError :message="errors.winpoints" />
         </div>
     </div>
+    <p v-if="formatLocked" class="text-sm text-muted-foreground">
+        {{
+            $t(
+                'Rounds, games, and winning points can no longer be changed once the tournament has started.',
+            )
+        }}
+    </p>
 
     <div class="grid gap-2">
         <div class="flex items-center gap-2">

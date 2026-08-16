@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head, Link } from '@inertiajs/vue3';
+import { Form, Head, Link, setLayoutProps } from '@inertiajs/vue3';
 import { Pencil, Shuffle, Trophy, UserPlus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
@@ -56,6 +56,7 @@ const props = defineProps<{
         private: boolean;
         creator: string;
         modifiable: boolean;
+        registrationOpen: boolean;
     };
     currentRound: number;
     standings: StandingRow[];
@@ -64,14 +65,19 @@ const props = defineProps<{
     drawn: boolean;
 }>();
 
-defineOptions({
-    layout: {
-        breadcrumbs: [{ title: trans('Tournaments'), href: index() }],
-    },
+setLayoutProps({
+    breadcrumbs: [
+        { title: trans('Tournaments'), href: index() },
+        { title: props.tournament.name, href: show(props.tournament.id) },
+    ],
 });
 
 const rounds = computed(() =>
     Array.from({ length: props.tournament.rounds }, (_, i) => i + 1),
+);
+
+const hasEditableFixtures = computed(() =>
+    props.fixtures.data.some((fixture) => fixture.editable),
 );
 
 function formatStart(start: string): string {
@@ -235,7 +241,11 @@ function rankAccent(rank: number, total: number): string {
                         {{ $t('Table lists') }}
                     </a>
                 </Button>
-                <Button v-if="tournament.modifiable" as-child variant="outline">
+                <Button
+                    v-if="tournament.modifiable && tournament.registrationOpen"
+                    as-child
+                    variant="outline"
+                >
                     <Link :href="register(tournament.id)">
                         <UserPlus class="size-4" />
                         {{ $t('Register participants') }}
@@ -313,7 +323,10 @@ function rankAccent(rank: number, total: number): string {
                         <th class="px-4 py-2 text-center font-medium">
                             {{ $t('Games : Points') }}
                         </th>
-                        <th class="px-4 py-2 text-right font-medium">
+                        <th
+                            v-if="hasEditableFixtures"
+                            class="px-4 py-2 text-right font-medium"
+                        >
                             {{ $t('Actions') }}
                         </th>
                     </tr>
@@ -321,7 +334,7 @@ function rankAccent(rank: number, total: number): string {
                 <tbody>
                     <tr v-if="fixtures.data.length === 0">
                         <td
-                            colspan="5"
+                            :colspan="hasEditableFixtures ? 5 : 4"
                             class="px-4 py-6 text-center text-muted-foreground"
                         >
                             {{ $t('No fixtures for this round yet.') }}
@@ -377,7 +390,7 @@ function rankAccent(rank: number, total: number): string {
                                 {{ fixture.scorePoints }}
                             </div>
                         </td>
-                        <td class="px-4 py-2">
+                        <td v-if="hasEditableFixtures" class="px-4 py-2">
                             <div class="flex items-center justify-end gap-1">
                                 <Tooltip v-if="fixture.editable">
                                     <TooltipTrigger as-child>

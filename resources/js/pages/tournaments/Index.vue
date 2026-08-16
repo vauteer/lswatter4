@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Eye, Pencil, Plus, UserPlus } from '@lucide/vue';
+import { ListOrdered, Pencil, Plus, UserPlus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
@@ -22,6 +22,7 @@ type TournamentRow = {
     creator: string;
     private: boolean;
     modifiable: boolean;
+    registrationOpen: boolean;
 };
 
 type PaginatedTournaments = {
@@ -162,7 +163,7 @@ function formatStart(start: string): string {
                                                     })
                                                 "
                                             >
-                                                <Eye class="size-4" />
+                                                <ListOrdered class="size-4" />
                                             </Link>
                                         </Button>
                                     </TooltipTrigger>
@@ -171,7 +172,12 @@ function formatStart(start: string): string {
                                     }}</TooltipContent>
                                 </Tooltip>
 
-                                <Tooltip v-if="tournament.modifiable">
+                                <Tooltip
+                                    v-if="
+                                        tournament.modifiable &&
+                                        tournament.registrationOpen
+                                    "
+                                >
                                     <TooltipTrigger as-child>
                                         <Button
                                             variant="ghost"

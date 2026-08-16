@@ -129,6 +129,7 @@ class TournamentController extends Controller
 
         return Inertia::render('tournaments/Edit', [
             'tournament' => new TournamentResource($tournament),
+            'started' => $tournament->started(),
         ]);
     }
 
@@ -139,9 +140,23 @@ class TournamentController extends Controller
     {
         Gate::authorize('update', $tournament);
 
-        $tournament->update($request->validated());
+        $data = $request->validated();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Tournament updated.')]);
+        $formatChanged = (int) $data['rounds'] !== $tournament->rounds
+            || (int) $data['games'] !== $tournament->games
+            || (int) $data['winpoints'] !== $tournament->winpoints;
+        $discardDraw = $tournament->drawn() && $formatChanged;
+
+        $tournament->update($data);
+
+        $message = __('Tournament updated.');
+
+        if ($discardDraw) {
+            $tournament->discardDraw();
+            $message .= ' '.__('The existing draw was discarded because the tournament format changed.');
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
 
         return to_route('tournaments.index');
     }

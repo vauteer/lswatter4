@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Team;
 use App\Models\Tournament;
 use App\Models\User;
 
@@ -14,6 +15,25 @@ test('authenticated users can view the tournaments list', function () {
     $response = $this->actingAs($user)->get(route('tournaments.index'));
 
     $response->assertOk();
+});
+
+test('the tournaments list reports whether registration is still open for each tournament', function () {
+    $admin = User::factory()->admin()->create();
+    $open = Tournament::factory()->create(['start' => now()->addDays(2)]);
+    $started = Tournament::factory()->create(['start' => now()->addDay()]);
+    for ($i = 0; $i < 4; $i++) {
+        $started->teams()->attach(Team::factory()->create());
+    }
+    $started->draw();
+    $started->fixtures()->first()->update(['score' => '11-5 11-5 11-5 11-5']);
+
+    $response = $this->actingAs($admin)->get(route('tournaments.index'));
+
+    $response->assertInertia(fn ($page) => $page
+        ->where('tournaments.data.0.id', $open->id)
+        ->where('tournaments.data.0.registrationOpen', true)
+        ->where('tournaments.data.1.id', $started->id)
+        ->where('tournaments.data.1.registrationOpen', false));
 });
 
 test('authenticated users can create a tournament', function () {
@@ -66,6 +86,85 @@ test('creators can update their own tournament', function () {
     $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index'));
 
     expect($tournament->refresh()->name)->toBe('Updated Name');
+});
+
+test('the edit page reports whether the tournament has started', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)->get(route('tournaments.edit', $tournament))
+        ->assertInertia(fn ($page) => $page->where('started', false));
+});
+
+test('rounds, games, and winpoints can still be changed on a drawn but not yet started tournament, discarding the draw', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id, 'rounds' => 3, 'games' => 4, 'winpoints' => 11]);
+    for ($i = 0; $i < 4; $i++) {
+        $tournament->teams()->attach(Team::factory()->create());
+    }
+    $tournament->draw();
+
+    $response = $this->actingAs($user)->put(route('tournaments.update', $tournament), [
+        'name' => $tournament->name,
+        'start' => $tournament->start->format('Y-m-d H:i'),
+        'rounds' => 4,
+        'games' => $tournament->games,
+        'winpoints' => $tournament->winpoints,
+        'private' => $tournament->private,
+    ]);
+
+    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index'));
+    expect($tournament->refresh()->rounds)->toBe(4);
+    expect($tournament->drawn())->toBeFalse();
+    expect(session('inertia.flash_data')['toast'])->toBe([
+        'type' => 'success',
+        'message' => __('Tournament updated.').' '.__('The existing draw was discarded because the tournament format changed.'),
+    ]);
+});
+
+test('rounds, games, and winpoints cannot be changed once the tournament has started', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id, 'rounds' => 3, 'games' => 4, 'winpoints' => 11]);
+    for ($i = 0; $i < 4; $i++) {
+        $tournament->teams()->attach(Team::factory()->create());
+    }
+    $tournament->draw();
+    $tournament->fixtures()->first()->update(['score' => '11-5 11-5 11-5 11-5']);
+
+    $response = $this->actingAs($user)->put(route('tournaments.update', $tournament), [
+        'name' => $tournament->name,
+        'start' => $tournament->start->format('Y-m-d H:i'),
+        'rounds' => 5,
+        'games' => $tournament->games,
+        'winpoints' => $tournament->winpoints,
+        'private' => $tournament->private,
+    ]);
+
+    $response->assertSessionHasErrors('rounds');
+    expect($tournament->fresh()->rounds)->toBe(3);
+});
+
+test('other fields can still be updated once the tournament has started, as long as the format is unchanged', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id, 'rounds' => 3, 'games' => 4, 'winpoints' => 11]);
+    for ($i = 0; $i < 4; $i++) {
+        $tournament->teams()->attach(Team::factory()->create());
+    }
+    $tournament->draw();
+    $tournament->fixtures()->first()->update(['score' => '11-5 11-5 11-5 11-5']);
+
+    $response = $this->actingAs($user)->put(route('tournaments.update', $tournament), [
+        'name' => 'Renamed Tournament',
+        'start' => $tournament->start->format('Y-m-d H:i'),
+        'rounds' => $tournament->rounds,
+        'games' => $tournament->games,
+        'winpoints' => $tournament->winpoints,
+        'private' => $tournament->private,
+    ]);
+
+    $response->assertSessionHasNoErrors();
+    expect($tournament->refresh()->name)->toBe('Renamed Tournament');
+    expect($tournament->drawn())->toBeTrue();
 });
 
 test('users cannot update a tournament created by someone else', function () {

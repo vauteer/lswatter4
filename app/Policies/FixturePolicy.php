@@ -9,6 +9,7 @@ class FixturePolicy
 {
     public function update(User $user, Fixture $fixture): bool
     {
-        return $fixture->tournament->modifiableBy($user);
+        return $fixture->tournament->modifiableBy($user)
+            && ! $fixture->tournament->resultsLocked();
     }
 }

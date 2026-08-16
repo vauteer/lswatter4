@@ -89,13 +89,28 @@ class Tournament extends Model
     }
 
     /**
+     * Discard the current draw. Used when the roster changes after
+     * drawing but before any result is entered, since the existing
+     * fixtures no longer reflect who's actually registered.
+     */
+    public function discardDraw(): void
+    {
+        $this->fixtures()->delete();
+    }
+
+    /**
      * Whether the tournament currently has a valid, complete team roster
      * to draw fixtures from: enough teams to fill at least two tables,
-     * an even number of them so every table has two teams, and no
-     * single players left waiting to be joined into a team.
+     * an even number of them so every table has two teams, no single
+     * players left waiting to be joined into a team, and no result has
+     * been entered yet that a (re)draw would otherwise invalidate.
      */
     public function canDraw(): bool
     {
+        if ($this->started()) {
+            return false;
+        }
+
         $teamsCount = $this->teams()->count();
 
         return $teamsCount >= 4
@@ -108,6 +123,17 @@ class Tournament extends Model
         return $this->drawn() && $this->fixtures()->whereNotNull('score')->count() > 0;
     }
 
+    /**
+     * Whether the roster (players/teams) can still be changed. Once a
+     * result has been entered, registering or unregistering a
+     * participant would silently desync the standings from what was
+     * actually played, so registration locks at that point.
+     */
+    public function registrationOpen(): bool
+    {
+        return ! $this->started();
+    }
+
     public function finished(): bool
     {
         Fixture::where('tournament_id', $this->id)
@@ -115,6 +141,30 @@ class Tournament extends Model
             ->update(['score' => null]);
 
         return $this->drawn() && $this->fixtures()->whereNull('score')->count() === 0;
+    }
+
+    /**
+     * When the tournament became fully scored - the last fixture result
+     * that was saved - or null while it isn't finished yet. Derived
+     * rather than stored, so correcting a result within the edit window
+     * pushes this (and the window) later, same as the original save did.
+     */
+    public function finishedAt(): ?CarbonInterface
+    {
+        if (! $this->finished()) {
+            return null;
+        }
+
+        return $this->fixtures()->latest('updated_at')->first()?->updated_at;
+    }
+
+    /**
+     * Once a finished tournament is more than a day past finishing,
+     * its results can no longer be edited.
+     */
+    public function resultsLocked(): bool
+    {
+        return $this->finishedAt()?->addDay()->isPast() ?? false;
     }
 
     /**

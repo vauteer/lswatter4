@@ -55,7 +55,30 @@ class TournamentController extends Controller
                 ->where('round', $round)
                 ->orderBy('table_number')
                 ->get()),
+            'canDraw' => $tournament->canDraw(),
+            'drawn' => $tournament->drawn(),
         ]);
+    }
+
+    /**
+     * Randomly draw (or redraw) the tournament's fixtures from its
+     * currently registered teams.
+     */
+    public function draw(Tournament $tournament): RedirectResponse
+    {
+        Gate::authorize('update', $tournament);
+
+        abort_unless($tournament->canDraw(), 422);
+
+        $redraw = $tournament->drawn();
+
+        $tournament->draw();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => $redraw
+            ? __('Tournament redrawn.')
+            : __('Tournament drawn.')]);
+
+        return to_route('tournaments.show', $tournament);
     }
 
     /**

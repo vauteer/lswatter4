@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { Pencil, Trophy, UserPlus } from '@lucide/vue';
+import { Form, Head, Link } from '@inertiajs/vue3';
+import { Pencil, Shuffle, Trophy, UserPlus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
+import TournamentController from '@/actions/App/Http/Controllers/TournamentController';
+import ConfirmActionDialog from '@/components/ConfirmActionDialog.vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -58,6 +60,8 @@ const props = defineProps<{
     currentRound: number;
     standings: StandingRow[];
     fixtures: { data: FixtureRow[] };
+    canDraw: boolean;
+    drawn: boolean;
 }>();
 
 defineOptions({
@@ -237,6 +241,36 @@ function rankAccent(rank: number, total: number): string {
                         {{ $t('Register participants') }}
                     </Link>
                 </Button>
+                <Form
+                    v-if="tournament.modifiable && canDraw && !drawn"
+                    v-bind="TournamentController.draw.form(tournament.id)"
+                    v-slot="{ processing }"
+                >
+                    <Button
+                        type="submit"
+                        variant="outline"
+                        :disabled="processing"
+                    >
+                        <Shuffle class="size-4" />
+                        {{ $t('Draw') }}
+                    </Button>
+                </Form>
+                <ConfirmActionDialog
+                    v-else-if="tournament.modifiable && canDraw && drawn"
+                    :action="TournamentController.draw.form(tournament.id)"
+                    :title="$t('Redraw tournament?')"
+                    :description="
+                        $t(
+                            'This discards all current fixtures and results and creates a new random draw. This action cannot be undone.',
+                        )
+                    "
+                    :confirm-label="$t('Redraw')"
+                >
+                    <Button variant="outline">
+                        <Shuffle class="size-4" />
+                        {{ $t('Redraw') }}
+                    </Button>
+                </ConfirmActionDialog>
                 <Button v-if="tournament.modifiable" as-child variant="outline">
                     <Link :href="editTournament(tournament.id)">
                         {{ $t('Edit tournament') }}

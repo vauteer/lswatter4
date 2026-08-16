@@ -65,6 +65,12 @@
     "Tournament created.": "Turnier erstellt.",
     "Tournament updated.": "Turnier aktualisiert.",
     "Tournament deleted.": "Turnier gelöscht.",
+    "Draw": "Auslosen",
+    "Redraw": "Neu auslosen",
+    "Redraw tournament?": "Turnier neu auslosen?",
+    "This discards all current fixtures and results and creates a new random draw. This action cannot be undone.": "Dadurch werden alle aktuellen Begegnungen und Ergebnisse verworfen und eine neue, zufällige Auslosung erstellt. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "Tournament drawn.": "Turnier ausgelost.",
+    "Tournament redrawn.": "Turnier neu ausgelost.",
 
     ":start · Created by :creator": ":start · Erstellt von :creator",
     "Table lists": "Tisch-Listen",

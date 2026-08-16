@@ -87,6 +87,21 @@ class Tournament extends Model
         return $this->fixtures()->count() > 0;
     }
 
+    /**
+     * Whether the tournament currently has a valid, complete team roster
+     * to draw fixtures from: enough teams to fill at least two tables,
+     * an even number of them so every table has two teams, and no
+     * single players left waiting to be joined into a team.
+     */
+    public function canDraw(): bool
+    {
+        $teamsCount = $this->teams()->count();
+
+        return $teamsCount >= 4
+            && $teamsCount % 2 === 0
+            && $this->players()->count() === 0;
+    }
+
     public function started(): bool
     {
         return $this->drawn() && $this->fixtures()->whereNotNull('score')->count() > 0;
@@ -135,12 +150,20 @@ class Tournament extends Model
 
     public function draw(): void
     {
-        $teamsCount = $this->teams()->count();
-        if ($teamsCount < 2 || $teamsCount % 2 !== 0) {
+        if (! $this->canDraw()) {
             return;
         }
 
-        $tableCount = $teamsCount / 2;
+        $teamsCount = $this->teams()->count();
+        if ($teamsCount < 4) {
+            return;
+        }
+
+        $tableCount = intdiv($teamsCount, 2);
+        if ($tableCount < 1) {
+            return;
+        }
+
         $this->fixtures()->delete();
 
         $randomTeams = $this->teams()->inRandomOrder()->pluck('teams.id')->toArray();

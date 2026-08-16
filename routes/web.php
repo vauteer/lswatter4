@@ -19,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('tournaments', TournamentController::class)->except('show');
     Route::get('tournaments/{tournament}', [TournamentController::class, 'show'])->name('tournaments.show');
     Route::get('tournaments/{tournament}/lists/{round}', [TournamentController::class, 'tableLists'])->name('tournaments.lists');
+    Route::post('tournaments/{tournament}/draw', [TournamentController::class, 'draw'])->name('tournaments.draw');
 
     Route::get('tournaments/{tournament}/register', [TournamentRegistrationController::class, 'index'])->name('tournaments.register');
     Route::post('tournaments/{tournament}/register', [TournamentRegistrationController::class, 'store'])->name('tournaments.register.store');

@@ -138,6 +138,18 @@ test('possible duplicate groups catch names entered under slightly different spe
         ->toContain(['Mueller Hans', 'Müller Hans']);
 });
 
+test('possible duplicate groups catch firstname and surname entered in swapped order', function () {
+    Player::factory()->create(['name' => 'Bärbel Schindler']);
+    Player::factory()->create(['name' => 'Schindler Bärbel']);
+    Player::factory()->create(['name' => 'Completely Different']);
+
+    $groups = Player::possibleDuplicateGroups();
+
+    expect($groups)->toHaveCount(1);
+    expect($groups->map(fn ($group) => $group->pluck('name')->sort()->values()->all())->all())
+        ->toContain(['Bärbel Schindler', 'Schindler Bärbel']);
+});
+
 test('possible duplicate groups do not flag clearly different names', function () {
     Player::factory()->create(['name' => 'Anna Schmidt']);
     Player::factory()->create(['name' => 'Ben Fischer']);

@@ -139,7 +139,8 @@ class Player extends Model
     /**
      * Group players whose names look like the same person entered under
      * slightly different spelling - case, whitespace, accents (Müller vs
-     * Mueller), or a small typo - so they can be spotted and cleaned up.
+     * Mueller), a small typo, or firstname/surname swapped (Schindler
+     * Bärbel vs Bärbel Schindler) - so they can be spotted and cleaned up.
      * Only players with at least one likely match are included.
      *
      * @return SupportCollection<int, Collection<int, Player>>
@@ -152,6 +153,8 @@ class Player extends Model
             $player->id => Str::of($player->name)->trim()->lower()->ascii('de')->toString(),
         ]);
 
+        $wordSorted = $normalized->map(fn (string $name): string => self::sortWords($name));
+
         /** @var array<int, int> $parent */
         $parent = $players->pluck('id')->mapWithKeys(fn (int $id): array => [$id => $id])->all();
 
@@ -159,7 +162,8 @@ class Player extends Model
 
         foreach ($ids as $index => $idA) {
             foreach (array_slice($ids, $index + 1) as $idB) {
-                if (self::namesLikelyMatch($normalized[$idA], $normalized[$idB])) {
+                if (self::namesLikelyMatch($normalized[$idA], $normalized[$idB])
+                    || self::namesLikelyMatch($wordSorted[$idA], $wordSorted[$idB])) {
                     self::union($parent, $idA, $idB);
                 }
             }
@@ -177,6 +181,19 @@ class Player extends Model
         $threshold = min(strlen($a), strlen($b)) >= 6 ? 2 : 1;
 
         return $distance <= $threshold;
+    }
+
+    /**
+     * Alphabetically sort the words of a name, so e.g. "schindler baerbel"
+     * and "baerbel schindler" become comparable - catches firstname/surname
+     * entered in swapped order.
+     */
+    private static function sortWords(string $name): string
+    {
+        $words = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY);
+        sort($words);
+
+        return implode(' ', $words);
     }
 
     /**

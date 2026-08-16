@@ -84,7 +84,7 @@ const mainNavItems = computed<NavItem[]>(() => [
             <NavMain :items="mainNavItems" />
         </SidebarContent>
 
-        <SidebarFooter>
+        <SidebarFooter class="pb-12">
             <NavUser />
         </SidebarFooter>
     </Sidebar>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
-import { Link2, Trash2 } from '@lucide/vue';
+import { Link2, Shuffle, Trash2 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { ref, useTemplateRef } from 'vue';
+import TournamentController from '@/actions/App/Http/Controllers/TournamentController';
 import TournamentRegistrationController from '@/actions/App/Http/Controllers/TournamentRegistrationController';
 import ConfirmActionDialog from '@/components/ConfirmActionDialog.vue';
 import Heading from '@/components/Heading.vue';
@@ -24,6 +25,8 @@ defineProps<{
     players: SelectOption[];
     teams: TeamRow[];
     allPlayers: SelectOption[];
+    canDraw: boolean;
+    drawn: boolean;
 }>();
 
 defineOptions({
@@ -123,6 +126,47 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                     <Button :disabled="processing">{{ $t('Register') }}</Button>
                 </div>
             </Form>
+        </div>
+
+        <div
+            v-if="canDraw"
+            class="flex flex-col items-start justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center"
+        >
+            <Heading
+                variant="small"
+                :title="drawn ? $t('Ready to redraw') : $t('Ready to draw')"
+                :description="
+                    $t(
+                        'All teams are registered. Draw the fixtures to start the tournament.',
+                    )
+                "
+            />
+            <Form
+                v-if="!drawn"
+                v-bind="TournamentController.draw.form(tournament.id)"
+                v-slot="{ processing }"
+            >
+                <Button type="submit" size="lg" :disabled="processing">
+                    <Shuffle class="size-4" />
+                    {{ $t('Draw') }}
+                </Button>
+            </Form>
+            <ConfirmActionDialog
+                v-else
+                :action="TournamentController.draw.form(tournament.id)"
+                :title="$t('Redraw tournament?')"
+                :description="
+                    $t(
+                        'This discards all current fixtures and results and creates a new random draw. This action cannot be undone.',
+                    )
+                "
+                :confirm-label="$t('Redraw')"
+            >
+                <Button size="lg" variant="outline">
+                    <Shuffle class="size-4" />
+                    {{ $t('Redraw') }}
+                </Button>
+            </ConfirmActionDialog>
         </div>
 
         <div

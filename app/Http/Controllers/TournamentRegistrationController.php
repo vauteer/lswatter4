@@ -37,6 +37,8 @@ class TournamentRegistrationController extends Controller
                     'player2' => $team->player2->name,
                 ]),
             'allPlayers' => Player::orderBy('name')->get(['id', 'name']),
+            'canDraw' => $tournament->canDraw(),
+            'drawn' => $tournament->drawn(),
         ]);
     }
 

@@ -4,6 +4,7 @@ use App\Models\Player;
 use App\Models\Team;
 use App\Models\Tournament;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 function registerTeams(Tournament $tournament, int $count): void
 {
@@ -109,6 +110,18 @@ test('drawing when the roster is not ready is rejected', function () {
 
     $response->assertStatus(422);
     expect($tournament->drawn())->toBeFalse();
+});
+
+test('the registration page exposes whether the tournament can be drawn', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+    registerTeams($tournament, 4);
+
+    $this->actingAs($user)->get(route('tournaments.register', $tournament))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('tournaments/Register')
+            ->where('canDraw', true)
+            ->where('drawn', false));
 });
 
 test('redrawing replaces existing fixtures', function () {

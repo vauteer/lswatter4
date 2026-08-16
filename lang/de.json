@@ -71,6 +71,9 @@
     "This discards all current fixtures and results and creates a new random draw. This action cannot be undone.": "Dadurch werden alle aktuellen Begegnungen und Ergebnisse verworfen und eine neue, zufällige Auslosung erstellt. Diese Aktion kann nicht rückgängig gemacht werden.",
     "Tournament drawn.": "Turnier ausgelost.",
     "Tournament redrawn.": "Turnier neu ausgelost.",
+    "Ready to draw": "Bereit zum Auslosen",
+    "Ready to redraw": "Bereit zum Neu-Auslosen",
+    "All teams are registered. Draw the fixtures to start the tournament.": "Alle Teams sind registriert. Losen Sie die Begegnungen aus, um das Turnier zu starten.",
 
     ":start · Created by :creator": ":start · Erstellt von :creator",
     "Table lists": "Tisch-Listen",

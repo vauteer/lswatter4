@@ -45,7 +45,7 @@ class TournamentController extends Controller
     {
         Gate::authorize('view', $tournament);
 
-        $round = $request->integer('round') ?: $tournament->rounds;
+        $round = $request->integer('round') ?: $tournament->firstIncompleteRound();
 
         return Inertia::render('tournaments/Show', [
             'tournament' => new TournamentResource($tournament),

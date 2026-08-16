@@ -117,6 +117,25 @@ class Tournament extends Model
     }
 
     /**
+     * The round to preselect when opening the tournament: the earliest
+     * round that still has a fixture without a result, i.e. the round
+     * play is currently at. Falls back to the first round if nothing
+     * has been drawn yet, or the last round once everything is scored.
+     */
+    public function firstIncompleteRound(): int
+    {
+        if (! $this->drawn()) {
+            return 1;
+        }
+
+        Fixture::where('tournament_id', $this->id)
+            ->where('score', '')
+            ->update(['score' => null]);
+
+        return $this->fixtures()->whereNull('score')->min('round') ?? $this->rounds;
+    }
+
+    /**
      * @return Collection<int, array{name: string}>
      */
     public function playersAsArray(): Collection

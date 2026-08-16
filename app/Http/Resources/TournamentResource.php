@@ -2,9 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Tournament;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Tournament
+ */
 class TournamentResource extends JsonResource
 {
     /**

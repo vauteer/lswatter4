@@ -88,7 +88,9 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
             />
 
             <Form
-                v-bind="TournamentRegistrationController.store.form(tournament.id)"
+                v-bind="
+                    TournamentRegistrationController.store.form(tournament.id)
+                "
                 class="grid gap-4 sm:grid-cols-2"
                 @success="resetRegisterForm"
                 v-slot="{ errors, processing }"
@@ -159,7 +161,10 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                                 <ConfirmActionDialog
                                     :action="
                                         TournamentRegistrationController.destroyTeam.form(
-                                            { tournament: tournament.id, team: team.id },
+                                            {
+                                                tournament: tournament.id,
+                                                team: team.id,
+                                            },
                                         )
                                     "
                                     :title="$t('Unregister team?')"

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Concerns\PlayerValidationRules;
+use App\Models\Player;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -17,7 +18,9 @@ class PlayerUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->playerRules($this->route('player')->id);
+        $player = $this->route('player');
+
+        return $this->playerRules($player instanceof Player ? $player->id : null);
     }
 
     /**

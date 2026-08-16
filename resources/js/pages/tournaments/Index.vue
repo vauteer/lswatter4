@@ -183,7 +183,9 @@ function formatStart(start: string): string {
                                                 :aria-label="
                                                     $t(
                                                         'Register participants for :name',
-                                                        { name: tournament.name },
+                                                        {
+                                                            name: tournament.name,
+                                                        },
                                                     )
                                                 "
                                             >

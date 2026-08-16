@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Concerns\UserValidationRules;
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -17,7 +18,9 @@ class UserUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->userRules($this->route('user')->id);
+        $user = $this->route('user');
+
+        return $this->userRules($user instanceof User ? $user->id : null);
     }
 
     /**

@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
  * @property int $winpoints
  * @property bool $private
  * @property int $created_by
+ * @property-read User $creator
  * @property CarbonInterface|null $created_at
  * @property CarbonInterface|null $updated_at
  */

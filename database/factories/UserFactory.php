@@ -56,6 +56,13 @@ class UserFactory extends Factory
 
     /**
      * Indicate that the model has two-factor authentication configured.
+     *
+     * This app doesn't have Fortify's two-factor columns migrated, so
+     * there's nothing to set; the state is a no-op kept only so tests
+     * gated behind Features::twoFactorAuthentication() still compile.
      */
-    public function withTwoFactor(): static {}
+    public function withTwoFactor(): static
+    {
+        return $this;
+    }
 }

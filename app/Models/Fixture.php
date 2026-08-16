@@ -15,6 +15,8 @@ use Illuminate\Support\Carbon;
  * @property int $tournament_id
  * @property int $team1_id
  * @property int $team2_id
+ * @property-read Team $team1
+ * @property-read Team $team2
  * @property int $round
  * @property int $table_number
  * @property string|null $score
@@ -58,7 +60,7 @@ class Fixture extends Model
         return $this->belongsTo(Team::class);
     }
 
-    public function calculate(?string $newScore, bool $persist): bool|string
+    public function calculate(?string $newScore, bool $persist): true|string
     {
         $wonHome = $wonAway = $pointsHome = $pointsAway = 0;
         $requiredGames = $this->tournament->games;

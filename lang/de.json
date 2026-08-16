@@ -102,6 +102,8 @@
     "The :attribute has an invalid format or the wrong number of games.": ":attribute hat ein ungültiges Format oder die falsche Anzahl an Spielen.",
 
     "Backups": "Backups",
+    "Logs": "Logs",
+    "Telescope": "Telescope",
     "Create and restore database backups": "Datenbank-Backups erstellen und wiederherstellen",
     "New backup": "Neues Backup",
     "Creating …": "Wird erstellt …",

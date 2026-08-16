@@ -17,7 +17,8 @@
         "laravel/framework": "^13.17",
         "laravel/telescope": "^5.22",
         "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.14"
+        "laravel/wayfinder": "^0.1.14",
+        "opcodesio/log-viewer": "^3.24"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^4.4",

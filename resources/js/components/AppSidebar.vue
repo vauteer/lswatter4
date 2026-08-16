@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     Contact,
     DatabaseBackup,
+    FileText,
     LayoutGrid,
+    Telescope as TelescopeIcon,
     Trophy,
     Users,
 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
-import { computed } from 'vue';
+import { computed, onUnmounted } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -20,6 +22,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as backupsIndex } from '@/routes/backups';
@@ -29,6 +32,16 @@ import { index as usersIndex } from '@/routes/users';
 import type { NavItem } from '@/types';
 
 const page = usePage();
+
+const { setOpenMobile } = useSidebar();
+
+// Closes the mobile sidebar sheet after any navigation, so picking a menu
+// item doesn't leave it covering the page it just opened.
+const removeNavigateListener = router.on('navigate', () =>
+    setOpenMobile(false),
+);
+
+onUnmounted(removeNavigateListener);
 
 // AppSidebar lives in a persistent layout, so it isn't remounted between
 // page visits (e.g. starting or ending impersonation) - this must stay
@@ -60,6 +73,18 @@ const mainNavItems = computed<NavItem[]>(() => [
                   title: trans('Backups'),
                   href: backupsIndex(),
                   icon: DatabaseBackup,
+              },
+              {
+                  title: trans('Logs'),
+                  href: '/log-viewer',
+                  icon: FileText,
+                  external: true,
+              },
+              {
+                  title: trans('Telescope'),
+                  href: '/telescope',
+                  icon: TelescopeIcon,
+                  external: true,
               },
           ]
         : []),

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\TournamentState;
 use Carbon\CarbonInterface;
 use Fpdf\Fpdf;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -114,6 +115,28 @@ class Tournament extends Model
             ->update(['score' => null]);
 
         return $this->drawn() && $this->fixtures()->whereNull('score')->count() === 0;
+    }
+
+    /**
+     * Where the tournament currently stands in its lifecycle: still
+     * building its roster, drawn but not yet started, in progress, or
+     * fully scored.
+     */
+    public function state(): TournamentState
+    {
+        if (! $this->drawn()) {
+            return TournamentState::Registering;
+        }
+
+        if ($this->finished()) {
+            return TournamentState::Finished;
+        }
+
+        if ($this->started()) {
+            return TournamentState::Running;
+        }
+
+        return TournamentState::Drawn;
     }
 
     /**

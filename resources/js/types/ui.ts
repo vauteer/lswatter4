@@ -7,3 +7,8 @@ export type FlashToast = {
     type: 'success' | 'info' | 'warning' | 'error';
     message: string;
 };
+
+export type SelectOption = {
+    id: number;
+    name: string;
+};

@@ -59,6 +59,27 @@ class Team extends Model
     }
 
     /**
+     * Find the team pairing these two players, regardless of which one is
+     * player1/player2, or create it if it doesn't exist yet.
+     */
+    public static function findOrCreateForPlayers(Player $player1, Player $player2): self
+    {
+        $team = static::query()
+            ->where(fn (Builder $query) => $query
+                ->where('player1_id', $player1->id)
+                ->where('player2_id', $player2->id))
+            ->orWhere(fn (Builder $query) => $query
+                ->where('player1_id', $player2->id)
+                ->where('player2_id', $player1->id))
+            ->first();
+
+        return $team ?? static::create([
+            'player1_id' => $player1->id,
+            'player2_id' => $player2->id,
+        ]);
+    }
+
+    /**
      * @param  Builder<Team>  $query
      */
     #[Scope]

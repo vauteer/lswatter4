@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Pencil, Trophy } from '@lucide/vue';
+import { Pencil, Trophy, UserPlus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
@@ -16,6 +16,7 @@ import {
     edit as editTournament,
     index,
     lists,
+    register,
     show,
 } from '@/routes/tournaments';
 
@@ -229,6 +230,12 @@ function rankAccent(rank: number, total: number): string {
                     >
                         {{ $t('Table lists') }}
                     </a>
+                </Button>
+                <Button v-if="tournament.modifiable" as-child variant="outline">
+                    <Link :href="register(tournament.id)">
+                        <UserPlus class="size-4" />
+                        {{ $t('Register participants') }}
+                    </Link>
                 </Button>
                 <Button v-if="tournament.modifiable" as-child variant="outline">
                     <Link :href="editTournament(tournament.id)">

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Eye, Pencil, Plus } from '@lucide/vue';
+import { Eye, Pencil, Plus, UserPlus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
@@ -13,7 +13,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { create, edit, index, show } from '@/routes/tournaments';
+import { create, edit, index, register, show } from '@/routes/tournaments';
 
 type TournamentRow = {
     id: number;
@@ -171,6 +171,30 @@ function formatStart(start: string): string {
                                     }}</TooltipContent>
                                 </Tooltip>
 
+                                <Tooltip v-if="tournament.modifiable">
+                                    <TooltipTrigger as-child>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            as-child
+                                        >
+                                            <Link
+                                                :href="register(tournament.id)"
+                                                :aria-label="
+                                                    $t(
+                                                        'Register participants for :name',
+                                                        { name: tournament.name },
+                                                    )
+                                                "
+                                            >
+                                                <UserPlus class="size-4" />
+                                            </Link>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{{
+                                        $t('Register')
+                                    }}</TooltipContent>
+                                </Tooltip>
                                 <Tooltip v-if="tournament.modifiable">
                                     <TooltipTrigger as-child>
                                         <Button

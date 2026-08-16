@@ -57,6 +57,16 @@ class Player extends Model
         return $this->tournaments()->count() > 0 || $this->teams()->count() > 0;
     }
 
+    public function isRegisteredFor(Tournament $tournament): bool
+    {
+        return $tournament->players()->where('players.id', $this->id)->exists()
+            || $tournament->teams()
+                ->where(fn (Builder $query) => $query
+                    ->where('teams.player1_id', $this->id)
+                    ->orWhere('teams.player2_id', $this->id))
+                ->exists();
+    }
+
     /**
      * @param  Builder<Player>  $query
      */

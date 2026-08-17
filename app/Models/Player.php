@@ -209,8 +209,9 @@ class Player extends Model
     /**
      * Group players whose names look like the same person entered under
      * slightly different spelling - case, whitespace, accents (Müller vs
-     * Mueller), a small typo, or firstname/surname swapped (Schindler
-     * Bärbel vs Bärbel Schindler) - so they can be spotted and cleaned up.
+     * Mueller), a small typo, firstname/surname swapped (Schindler
+     * Bärbel vs Bärbel Schindler), or a common German nickname (Spänle
+     * Heiner vs Spänle Heinrich) - so they can be spotted and cleaned up.
      * Only players with at least one likely match are included.
      *
      * @return SupportCollection<int, Collection<int, Player>>
@@ -220,7 +221,9 @@ class Player extends Model
         $players = static::orderBy('name')->get(['id', 'name']);
 
         $normalized = $players->mapWithKeys(fn (self $player): array => [
-            $player->id => Str::of($player->name)->trim()->lower()->ascii('de')->toString(),
+            $player->id => self::canonicalizeNicknames(
+                Str::of($player->name)->trim()->lower()->ascii('de')->toString()
+            ),
         ]);
 
         $wordSorted = $normalized->map(fn (string $name): string => self::sortWords($name));
@@ -262,6 +265,68 @@ class Player extends Model
     {
         $words = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY);
         sort($words);
+
+        return implode(' ', $words);
+    }
+
+    /**
+     * Common German nickname -> full given-name equivalents (already
+     * lowercased and transliterated, matching the ascii('de') normalization
+     * applied before this runs), so e.g. "Heiner" and "Heinrich" are
+     * recognized as the same name even though they're too different for
+     * namesLikelyMatch()'s typo tolerance. Not exhaustive - just the most
+     * common ones - so this catches some but not all nickname variations.
+     *
+     * @var array<string, string>
+     */
+    private const array NICKNAMES = [
+        'heiner' => 'heinrich',
+        'heinz' => 'heinrich',
+        'fritz' => 'friedrich',
+        'willi' => 'wilhelm',
+        'sepp' => 'josef',
+        'seppl' => 'josef',
+        'schorsch' => 'georg',
+        'bernd' => 'bernhard',
+        'berni' => 'bernhard',
+        'andi' => 'andreas',
+        'toni' => 'anton',
+        'michi' => 'michael',
+        'michl' => 'michael',
+        'gaby' => 'gabriele',
+        'kathi' => 'katharina',
+        'kaethe' => 'katharina',
+        'grete' => 'margarete',
+        'gretel' => 'margarete',
+        'lisa' => 'elisabeth',
+        'liesl' => 'elisabeth',
+        'betti' => 'elisabeth',
+        'franzi' => 'franziska',
+        'moni' => 'monika',
+        'susi' => 'susanne',
+        'didi' => 'dieter',
+        'ede' => 'eduard',
+        'fips' => 'philipp',
+        'gustl' => 'gustav',
+        'resi' => 'theresia',
+        'uli' => 'ulrich',
+        'wolfi' => 'wolfgang',
+        'manni' => 'manfred',
+        'rudi' => 'rudolf',
+        'bene' => 'benedikt',
+        'benni' => 'benedikt',
+        'steffi' => 'stefanie',
+    ];
+
+    /**
+     * Replaces any word that's a known nickname with its full form, so
+     * name matching can see past it.
+     */
+    private static function canonicalizeNicknames(string $name): string
+    {
+        $words = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY);
+
+        $words = array_map(fn (string $word): string => self::NICKNAMES[$word] ?? $word, $words);
 
         return implode(' ', $words);
     }

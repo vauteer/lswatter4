@@ -150,6 +150,18 @@ test('possible duplicate groups catch firstname and surname entered in swapped o
         ->toContain(['Bärbel Schindler', 'Schindler Bärbel']);
 });
 
+test('possible duplicate groups catch a common German nickname for the same first name', function () {
+    Player::factory()->create(['name' => 'Spänle Heinrich']);
+    Player::factory()->create(['name' => 'Spänle Heiner']);
+    Player::factory()->create(['name' => 'Completely Different']);
+
+    $groups = Player::possibleDuplicateGroups();
+
+    expect($groups)->toHaveCount(1);
+    expect($groups->map(fn ($group) => $group->pluck('name')->sort()->values()->all())->all())
+        ->toContain(['Spänle Heiner', 'Spänle Heinrich']);
+});
+
 test('possible duplicate groups do not flag clearly different names', function () {
     Player::factory()->create(['name' => 'Anna Schmidt']);
     Player::factory()->create(['name' => 'Ben Fischer']);

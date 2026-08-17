@@ -7,6 +7,7 @@ use App\Http\Requests\TournamentUpdateRequest;
 use App\Http\Resources\FixtureResource;
 use App\Http\Resources\TournamentResource;
 use App\Models\Player;
+use App\Models\Team;
 use App\Models\Tournament;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -43,6 +44,8 @@ class TournamentController extends Controller
             'tournaments' => $tournaments->through(fn (Tournament $tournament) => new TournamentResource($tournament)),
             'filters' => ['search' => $search, 'player_id' => $playerId],
             'players' => Player::orderBy('name')->get(['id', 'name']),
+            'teamRanking' => Team::allTimeStandings(),
+            'playerRanking' => Player::allTimeStandings(),
         ]);
     }
 

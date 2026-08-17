@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ListOrdered, Pencil, Plus, UserPlus } from '@lucide/vue';
+import { ListOrdered, Medal, Pencil, Plus, UserPlus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed, ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
@@ -36,10 +36,29 @@ type PaginatedTournaments = {
     current_page: number;
 };
 
+type TeamRanking = {
+    id: number;
+    player1: string;
+    player2: string;
+    played: number;
+    won: number;
+    lost: number;
+};
+
+type PlayerRanking = {
+    id: number;
+    name: string;
+    played: number;
+    won: number;
+    lost: number;
+};
+
 const props = defineProps<{
     tournaments: PaginatedTournaments;
     filters: { search: string; player_id: number | null };
     players: SelectOption[];
+    teamRanking: TeamRanking[];
+    playerRanking: PlayerRanking[];
 }>();
 
 const page = usePage();
@@ -88,11 +107,7 @@ function formatStart(start: string): string {
                 :title="$t('Tournaments')"
                 :description="$t('Browse and manage tournaments')"
             />
-            <Button
-                v-if="page.props.auth.user"
-                as-child
-                variant="outline"
-            >
+            <Button v-if="page.props.auth.user" as-child variant="outline">
                 <Link :href="create()">
                     <Plus class="size-4" />
                     {{ $t('New tournament') }}
@@ -282,6 +297,76 @@ function formatStart(start: string): string {
                 }}
             </p>
             <Pagination :links="tournaments.links" />
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
+            <div
+                class="flex flex-col gap-3 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
+            >
+                <div class="flex items-center gap-2 font-medium">
+                    <Medal class="size-4 shrink-0" />
+                    {{ $t('All-time team ranking') }}
+                </div>
+
+                <ol
+                    v-if="teamRanking.length > 0"
+                    class="flex flex-col gap-1.5 text-sm"
+                >
+                    <li
+                        v-for="(team, index) in teamRanking"
+                        :key="team.id"
+                        class="flex items-center gap-2"
+                    >
+                        <span
+                            class="w-5 shrink-0 text-right text-muted-foreground"
+                            >{{ index + 1 }}</span
+                        >
+                        <span class="min-w-0 flex-1 truncate">
+                            {{ team.player1 }} / {{ team.player2 }}
+                        </span>
+                        <span class="shrink-0 text-muted-foreground">
+                            {{ team.won }}:{{ team.lost }}
+                        </span>
+                    </li>
+                </ol>
+                <p v-else class="text-sm text-muted-foreground">
+                    {{ $t('No games played yet.') }}
+                </p>
+            </div>
+
+            <div
+                class="flex flex-col gap-3 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
+            >
+                <div class="flex items-center gap-2 font-medium">
+                    <Medal class="size-4 shrink-0" />
+                    {{ $t('All-time player ranking') }}
+                </div>
+
+                <ol
+                    v-if="playerRanking.length > 0"
+                    class="flex flex-col gap-1.5 text-sm"
+                >
+                    <li
+                        v-for="(player, index) in playerRanking"
+                        :key="player.id"
+                        class="flex items-center gap-2"
+                    >
+                        <span
+                            class="w-5 shrink-0 text-right text-muted-foreground"
+                            >{{ index + 1 }}</span
+                        >
+                        <span class="min-w-0 flex-1 truncate">{{
+                            player.name
+                        }}</span>
+                        <span class="shrink-0 text-muted-foreground">
+                            {{ player.won }}:{{ player.lost }}
+                        </span>
+                    </li>
+                </ol>
+                <p v-else class="text-sm text-muted-foreground">
+                    {{ $t('No games played yet.') }}
+                </p>
+            </div>
         </div>
     </div>
 </template>

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Backup;
 use App\Models\Player;
-use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -43,8 +42,6 @@ class DashboardController extends Controller
                 'ago' => Carbon::createFromTimestamp($lastBackup['timestamp'], config('app.timezone'))->diffForHumans(),
                 'stale' => $lastBackup['age'] > self::BACKUP_STALE_AFTER_HOURS * 60,
             ],
-            'teamRanking' => Team::allTimeStandings(),
-            'playerRanking' => Player::allTimeStandings(),
         ]);
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Fixture;
 use App\Models\Player;
 use App\Models\Team;
 use App\Models\Tournament;
@@ -9,6 +10,36 @@ test('guests can view the tournaments list', function () {
     Tournament::factory()->create(['start' => now()->subDay()]);
 
     $this->get(route('tournaments.index'))->assertOk();
+});
+
+test('guests can see the all-time team and player rankings on the tournaments list', function () {
+    $winners = Team::factory()->create();
+    $losers = Team::factory()->create();
+
+    Fixture::factory()->create([
+        'team1_id' => $winners->id,
+        'team2_id' => $losers->id,
+        'score' => '11-5 11-5',
+        'team1_won' => 2,
+        'team2_won' => 0,
+        'team1_points' => 22,
+        'team2_points' => 10,
+    ]);
+
+    // Undrawn/unscored fixtures shouldn't count toward the ranking.
+    Fixture::factory()->create(['score' => null]);
+
+    $response = $this->get(route('tournaments.index'));
+
+    $response->assertInertia(fn ($page) => $page
+        ->has('teamRanking', 2)
+        ->where('teamRanking.0.id', $winners->id)
+        ->where('teamRanking.0.won', 2)
+        ->where('teamRanking.0.lost', 0)
+        ->where('teamRanking.0.player1', $winners->player1->name)
+        ->has('playerRanking', 4)
+        ->where('playerRanking.0.won', 2)
+        ->where('playerRanking.1.won', 2));
 });
 
 test('guests cannot manage tournaments', function () {

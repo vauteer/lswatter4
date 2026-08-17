@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   ci:
@@ -65,3 +66,14 @@ jobs:
 
       - name: Run CI Checks
         run: composer ci:check
+
+      - name: Retry job on transient infra failure
+        # GitHub's runners occasionally fail to download actions from
+        # codeload.github.com (429/502, or an "Internal server error") before
+        # any of our steps even run. That's not retryable via a shell loop,
+        # so instead we ask GitHub to rerun the whole (failed) job, capped at
+        # 3 total attempts to avoid looping forever on a real failure.
+        if: failure() && fromJSON(github.run_attempt) < 3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run rerun ${{ github.run_id }} --failed

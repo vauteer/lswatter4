@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\ActionType;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
@@ -18,7 +17,6 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $name
  * @property string $email
- * @property Carbon|null $email_verified_at
  * @property string $password
  * @property bool $admin
  * @property string|null $profile_image
@@ -41,7 +39,6 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'admin' => 'boolean',
         ];

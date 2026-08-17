@@ -9,7 +9,6 @@ import {
 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import Heading from '@/components/Heading.vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import { index as backupsIndex } from '@/routes/backups';
@@ -19,8 +18,6 @@ import { index as usersIndex } from '@/routes/users';
 type RecentUser = {
     id: number;
     name: string;
-    email: string;
-    verified: boolean;
     createdAgo: string;
 };
 
@@ -28,7 +25,6 @@ defineProps<{
     duplicatePlayerCount: number;
     users: {
         total: number;
-        unverified: number;
         recent: RecentUser[];
     };
     lastBackup: { date: string; ago: string; stale: boolean } | null;
@@ -116,14 +112,11 @@ defineOptions({
 
                 <p class="text-2xl font-bold">{{ users.total }}</p>
 
-                <p class="text-sm text-muted-foreground">
-                    {{
-                        users.unverified > 0
-                            ? $t(':count unverified accounts', {
-                                  count: String(users.unverified),
-                              })
-                            : $t('All accounts verified.')
-                    }}
+                <p
+                    v-if="users.recent.length > 0"
+                    class="text-sm text-muted-foreground"
+                >
+                    {{ $t('Most recently added') }}
                 </p>
 
                 <ul
@@ -136,14 +129,9 @@ defineOptions({
                         class="flex items-center justify-between gap-2"
                     >
                         <span class="truncate">{{ user.name }}</span>
-                        <span
-                            class="flex shrink-0 items-center gap-1.5 text-muted-foreground"
-                        >
-                            <Badge v-if="!user.verified" variant="outline">
-                                {{ $t('Unverified') }}
-                            </Badge>
-                            {{ user.createdAgo }}
-                        </span>
+                        <span class="shrink-0 text-muted-foreground">{{
+                            user.createdAgo
+                        }}</span>
                     </li>
                 </ul>
 

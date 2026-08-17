@@ -28,15 +28,12 @@ class DashboardController extends Controller
             'duplicatePlayerCount' => Player::possibleDuplicateGroups()->count(),
             'users' => [
                 'total' => User::count(),
-                'unverified' => User::whereNull('email_verified_at')->count(),
                 'recent' => User::orderByDesc('created_at')
                     ->limit(5)
-                    ->get(['id', 'name', 'email', 'email_verified_at', 'created_at'])
+                    ->get(['id', 'name', 'created_at'])
                     ->map(fn (User $user) => [
                         'id' => $user->id,
                         'name' => $user->name,
-                        'email' => $user->email,
-                        'verified' => $user->email_verified_at !== null,
                         'createdAgo' => $user->created_at->diffForHumans(),
                     ]),
             ],

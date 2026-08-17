@@ -95,11 +95,6 @@ class UserController extends Controller
         Gate::authorize('update', $user);
 
         $user->fill($request->validated());
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
         $user->save();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User updated.')]);

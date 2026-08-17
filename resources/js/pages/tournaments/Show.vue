@@ -234,6 +234,7 @@ function rankAccent(rank: number, total: number): string {
                     v-if="page.props.auth.user"
                     as-child
                     variant="outline"
+                    class="hidden md:inline-flex"
                 >
                     <a
                         :href="

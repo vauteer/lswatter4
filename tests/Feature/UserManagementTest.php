@@ -22,6 +22,28 @@ test('admins can view the users list', function () {
     $response->assertOk();
 });
 
+test('the users list reports null for a user who never logged in', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($admin)->get(route('users.index', ['search' => $user->email]));
+
+    $response->assertInertia(fn ($page) => $page->where('users.data.0.last_login_at', null));
+});
+
+test('the users list reports when a user last logged in', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+    $user->forceFill(['last_login_at' => now()->subDay()])->save();
+
+    $response = $this->actingAs($admin)->get(route('users.index', ['search' => $user->email]));
+
+    $response->assertInertia(fn ($page) => $page->where(
+        'users.data.0.last_login_at',
+        fn (?string $value) => $value !== null,
+    ));
+});
+
 test('the edit page reports which page and search to return to on cancel', function () {
     $admin = User::factory()->admin()->create();
     $user = User::factory()->create();

@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\ActionType;
-use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Attributes\Appends;
@@ -25,6 +23,7 @@ use Illuminate\Support\Facades\Storage;
  * @property bool $admin
  * @property string|null $profile_image
  * @property string|null $remember_token
+ * @property Carbon|null $last_login_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -46,6 +45,7 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'admin' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
     }
 
@@ -63,15 +63,6 @@ class User extends Authenticatable
     public function tracings(): HasMany
     {
         return $this->hasMany(Tracing::class);
-    }
-
-    public function lastLogin(): ?CarbonInterface
-    {
-        $lastLogin = $this->tracings()
-            ->actionType(ActionType::Login)->orderByDesc('at')
-            ->first();
-
-        return $lastLogin?->at;
     }
 
     protected function avatar(): Attribute

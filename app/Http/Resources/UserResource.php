@@ -32,6 +32,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'admin' => $this->admin,
             'created_at' => $this->created_at,
+            'last_login_at' => $this->last_login_at?->diffForHumans(),
             'impersonatable' => $request->user()->isAdmin()
                 && $request->user()->isNot($this->resource)
                 && ! $this->admin,

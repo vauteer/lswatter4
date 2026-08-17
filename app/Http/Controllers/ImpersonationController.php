@@ -54,8 +54,10 @@ class ImpersonationController extends Controller
 
         abort_if($admin === null, 404);
 
-        $request->session()->forget('impersonator_id');
+        // Forgotten after login (not before) so the login-tracking listener
+        // can still see it and skip recording this as a real login.
         Auth::login($admin);
+        $request->session()->forget('impersonator_id');
         $request->session()->regenerate();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Returned to your account.')]);

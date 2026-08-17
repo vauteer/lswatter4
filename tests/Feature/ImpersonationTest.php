@@ -13,6 +13,15 @@ test('admins can log in as another user', function () {
     expect(session('impersonator_id'))->toBe($admin->id);
 });
 
+test('impersonating a user does not record it as a login', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+
+    $this->actingAs($admin)->post(route('users.impersonate', $user));
+
+    expect($user->fresh()->last_login_at)->toBeNull();
+});
+
 test('non-admins cannot log in as another user', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
@@ -45,6 +54,16 @@ test('an impersonated session can return to the admin account', function () {
     $response->assertSessionHasNoErrors()->assertRedirect(route('users.index'));
     $this->assertAuthenticatedAs($admin);
     expect(session('impersonator_id'))->toBeNull();
+});
+
+test('returning to the admin account does not record it as a login', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+
+    $this->actingAs($admin)->post(route('users.impersonate', $user));
+    $this->delete(route('impersonate.destroy'));
+
+    expect($admin->fresh()->last_login_at)->toBeNull();
 });
 
 test('returning to the admin account requires an active impersonation', function () {

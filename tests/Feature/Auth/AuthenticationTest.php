@@ -22,6 +22,17 @@ test('users can authenticate using the login screen', function () {
     $response->assertRedirect(route('tournaments.index', absolute: false));
 });
 
+test('logging in records the last login time', function () {
+    $user = User::factory()->create();
+
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    expect($user->fresh()->last_login_at)->not->toBeNull();
+});
+
 test('users with two factor enabled are redirected to two factor challenge', function () {
     $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
 

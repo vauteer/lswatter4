@@ -25,6 +25,8 @@
     "Role": "Rolle",
     "Admin": "Administrator",
     "User": "Benutzer",
+    "Last login": "Letzte Anmeldung",
+    "Never": "Nie",
     "Name or email": "Name oder E-Mail",
     "No users found.": "Keine Benutzer gefunden.",
     "Cannot be deleted": "Kann nicht gelöscht werden",

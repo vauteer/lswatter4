@@ -17,7 +17,7 @@ import {
 import { create, edit, index } from '@/routes/users';
 import type { User } from '@/types';
 
-type UserRow = Pick<User, 'id' | 'name' | 'email' | 'admin'> & {
+type UserRow = Pick<User, 'id' | 'name' | 'email' | 'admin' | 'last_login_at'> & {
     impersonatable: boolean;
     modifiable: boolean;
 };
@@ -99,6 +99,9 @@ watch(search, (value) => {
                             {{ $t('Email address') }}
                         </th>
                         <th class="px-4 py-2 font-medium">{{ $t('Role') }}</th>
+                        <th class="px-4 py-2 font-medium">
+                            {{ $t('Last login') }}
+                        </th>
                         <th class="px-4 py-2 text-right font-medium">
                             {{ $t('Actions') }}
                         </th>
@@ -107,7 +110,7 @@ watch(search, (value) => {
                 <tbody>
                     <tr v-if="users.data.length === 0">
                         <td
-                            colspan="4"
+                            colspan="5"
                             class="px-4 py-6 text-center text-muted-foreground"
                         >
                             {{ $t('No users found.') }}
@@ -128,6 +131,9 @@ watch(search, (value) => {
                             >
                                 {{ user.admin ? $t('Admin') : $t('User') }}
                             </Badge>
+                        </td>
+                        <td class="px-4 py-2 text-muted-foreground">
+                            {{ user.last_login_at ?? $t('Never') }}
                         </td>
                         <td class="px-4 py-2">
                             <div class="flex items-center justify-end gap-1">

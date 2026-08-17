@@ -85,7 +85,7 @@ const backupToDelete = ref<BackupRow | null>(null);
                             $t('Age')
                         }}</TableHead>
                         <TableHead>{{ $t('Size') }}</TableHead>
-                        <TableHead class="hidden text-right md:table-cell">{{
+                        <TableHead class="text-right">{{
                             $t('Actions')
                         }}</TableHead>
                     </TableRow>
@@ -103,7 +103,7 @@ const backupToDelete = ref<BackupRow | null>(null);
                         <TableCell class="tabular-nums">
                             {{ backup.size }}
                         </TableCell>
-                        <TableCell class="hidden md:table-cell">
+                        <TableCell>
                             <div class="flex justify-end gap-1">
                                 <Tooltip>
                                     <TooltipTrigger as-child>
@@ -111,6 +111,7 @@ const backupToDelete = ref<BackupRow | null>(null);
                                             variant="ghost"
                                             size="icon"
                                             as-child
+                                            class="hidden md:inline-flex"
                                         >
                                             <a
                                                 :href="

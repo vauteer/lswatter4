@@ -57,6 +57,51 @@ const props = defineProps<{
 
 const duplicatesOpen = ref(false);
 
+type GroupSelection = {
+    keepId: number;
+    excludedIds: Set<number>;
+};
+
+// One entry per duplicate group, tracking which player to keep and which
+// ones (if any) the admin has ruled out as not actually being duplicates.
+const groupSelections = ref<GroupSelection[]>(
+    props.duplicateGroups.map((group) => ({
+        keepId: group[0].id,
+        excludedIds: new Set<number>(),
+    })),
+);
+
+function isExcluded(groupIndex: number, playerId: number): boolean {
+    const selection = groupSelections.value[groupIndex];
+
+    return selection.keepId !== playerId && selection.excludedIds.has(playerId);
+}
+
+function setKeeper(groupIndex: number, playerId: number): void {
+    groupSelections.value[groupIndex].keepId = playerId;
+}
+
+function onIncludeToggle(
+    groupIndex: number,
+    playerId: number,
+    event: Event,
+): void {
+    const included = (event.target as HTMLInputElement).checked;
+    const selection = groupSelections.value[groupIndex];
+
+    if (included) {
+        selection.excludedIds.delete(playerId);
+    } else {
+        selection.excludedIds.add(playerId);
+    }
+}
+
+function includedCount(groupIndex: number): number {
+    return props.duplicateGroups[groupIndex].filter(
+        (player) => !isExcluded(groupIndex, player.id),
+    ).length;
+}
+
 // So the edit page's Cancel button can return here instead of resetting
 // to the first, unfiltered page.
 const editQuery = computed(() => ({
@@ -145,16 +190,41 @@ watch(search, (value) => {
                             class="flex items-center gap-1.5"
                         >
                             <input
+                                type="checkbox"
+                                :checked="!isExcluded(groupIndex, player.id)"
+                                :disabled="
+                                    groupSelections[groupIndex].keepId ===
+                                    player.id
+                                "
+                                class="size-3.5 accent-primary"
+                                :aria-label="
+                                    $t('Merge :name', { name: player.name })
+                                "
+                                @change="
+                                    onIncludeToggle(
+                                        groupIndex,
+                                        player.id,
+                                        $event,
+                                    )
+                                "
+                            />
+                            <input
                                 type="radio"
                                 name="keep_id"
                                 :value="player.id"
-                                :checked="player.id === group[0].id"
+                                :checked="
+                                    groupSelections[groupIndex].keepId ===
+                                    player.id
+                                "
+                                :disabled="isExcluded(groupIndex, player.id)"
                                 class="size-3.5 accent-primary"
                                 :aria-label="
                                     $t('Keep :name', { name: player.name })
                                 "
+                                @change="setKeeper(groupIndex, player.id)"
                             />
                             <input
+                                v-if="!isExcluded(groupIndex, player.id)"
                                 type="hidden"
                                 name="player_ids[]"
                                 :value="player.id"
@@ -162,6 +232,11 @@ watch(search, (value) => {
                             <Link
                                 :href="edit(player.id, { query: editQuery })"
                                 class="hover:underline"
+                                :class="
+                                    isExcluded(groupIndex, player.id)
+                                        ? 'text-muted-foreground line-through'
+                                        : ''
+                                "
                                 >{{ player.name }}</Link
                             >
                         </div>
@@ -171,7 +246,9 @@ watch(search, (value) => {
                             type="submit"
                             size="sm"
                             variant="outline"
-                            :disabled="processing"
+                            :disabled="
+                                processing || includedCount(groupIndex) < 2
+                            "
                         >
                             <Merge class="size-4" />
                             {{ $t('Merge duplicates') }}

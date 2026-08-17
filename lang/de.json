@@ -42,6 +42,7 @@
     ":count possible duplicates found": ":count mögliche Duplikate gefunden",
     "Merge duplicates": "Duplikate zusammenführen",
     "Keep :name": ":name behalten",
+    "Merge :name": ":name zusammenführen",
     "The player to keep must be one of the selected duplicates.": "Der zu behaltende Spieler muss einer der ausgewählten Duplikate sein.",
     ":name1 and :name2 are both already registered for :tournaments - resolve that first.": ":name1 und :name2 sind beide bereits für :tournaments registriert - bitte zuerst dort auflösen.",
     ":count players merged into :name.": ":count Spieler wurden mit :name zusammengeführt.",

@@ -145,14 +145,29 @@ class Team extends Model
      */
     public static function consolidateAllDuplicates(): int
     {
-        $teams = static::all(['id', 'player1_id', 'player2_id']);
+        return self::mergeDuplicatesWithinGroups(self::duplicatePairs());
+    }
 
-        $byPair = $teams->groupBy(fn (self $team): string => implode('-', [
-            min($team->player1_id, $team->player2_id),
-            max($team->player1_id, $team->player2_id),
-        ]));
+    /**
+     * Groups of teams that pair the same two players (regardless of which
+     * is player1/player2). Only pairs with more than one row are
+     * included - normally left over because they're both already
+     * registered for the same tournament, so consolidateAllDuplicates()
+     * can't merge them automatically.
+     *
+     * @return SupportCollection<int, EloquentCollection<int, self>>
+     */
+    public static function duplicatePairs(): SupportCollection
+    {
+        $teams = static::with(['player1', 'player2'])->get();
 
-        return self::mergeDuplicatesWithinGroups($byPair);
+        return $teams
+            ->groupBy(fn (self $team): string => implode('-', [
+                min($team->player1_id, $team->player2_id),
+                max($team->player1_id, $team->player2_id),
+            ]))
+            ->filter(fn (EloquentCollection $group): bool => $group->count() > 1)
+            ->values();
     }
 
     /**

@@ -124,6 +124,76 @@ class Player extends Model
     }
 
     /**
+     * All-time standings across every scored fixture ever played
+     * (regardless of tournament or partner), ranked the same way as a
+     * single tournament's standings(): games won, then point difference,
+     * then points won. A fixture's result counts for both players of the
+     * team that played it.
+     *
+     * @return array<int, array{id: int, name: string, played: int, won: int, lost: int, pointsWon: int, pointsLost: int}>
+     */
+    public static function allTimeStandings(int $limit = 10): array
+    {
+        $branch = fn (string $teamColumn, string $wonColumn, string $lostColumn, string $pointsWonColumn, string $pointsLostColumn, string $playerColumn) => DB::table('fixtures')
+            ->join('teams', 'teams.id', '=', "fixtures.{$teamColumn}")
+            ->whereNotNull('fixtures.score')
+            ->select([
+                "teams.{$playerColumn} as player_id",
+                "fixtures.{$wonColumn} as won",
+                "fixtures.{$lostColumn} as lost",
+                "fixtures.{$pointsWonColumn} as points_won",
+                "fixtures.{$pointsLostColumn} as points_lost",
+            ]);
+
+        $results = $branch('team1_id', 'team1_won', 'team2_won', 'team1_points', 'team2_points', 'player1_id')
+            ->unionAll($branch('team1_id', 'team1_won', 'team2_won', 'team1_points', 'team2_points', 'player2_id'))
+            ->unionAll($branch('team2_id', 'team2_won', 'team1_won', 'team2_points', 'team1_points', 'player1_id'))
+            ->unionAll($branch('team2_id', 'team2_won', 'team1_won', 'team2_points', 'team1_points', 'player2_id'));
+
+        $aggregated = DB::query()
+            ->fromSub($results, 'results')
+            ->selectRaw('player_id, count(*) as played, sum(won) as won, sum(lost) as lost, sum(points_won) as points_won, sum(points_lost) as points_lost')
+            ->groupBy('player_id')
+            ->get()
+            ->keyBy('player_id');
+
+        if ($aggregated->isEmpty()) {
+            return [];
+        }
+
+        $standings = [];
+        foreach ($aggregated as $playerId => $row) {
+            $standings[$playerId] = [
+                'id' => $playerId,
+                'played' => (int) $row->played,
+                'won' => (int) $row->won,
+                'lost' => (int) $row->lost,
+                'pointsWon' => (int) $row->points_won,
+                'pointsLost' => (int) $row->points_lost,
+            ];
+        }
+
+        $games = $pointsDifference = $pointsWon = [];
+        foreach ($standings as $id => $ranking) {
+            $games[$id] = $ranking['won'];
+            $pointsDifference[$id] = $ranking['pointsWon'] - $ranking['pointsLost'];
+            $pointsWon[$id] = $ranking['pointsWon'];
+        }
+
+        array_multisort($games, SORT_DESC, $pointsDifference, SORT_DESC, $pointsWon, SORT_DESC, $standings);
+
+        $standings = array_slice($standings, 0, $limit);
+
+        $players = static::whereIn('id', array_column($standings, 'id'))->get()->keyBy('id');
+
+        foreach ($standings as &$row) {
+            $row['name'] = $players[$row['id']]->name;
+        }
+
+        return $standings;
+    }
+
+    /**
      * @param  Builder<Player>  $query
      */
     #[Scope]

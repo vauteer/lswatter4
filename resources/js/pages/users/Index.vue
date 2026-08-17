@@ -17,7 +17,10 @@ import {
 import { create, edit, index } from '@/routes/users';
 import type { User } from '@/types';
 
-type UserRow = Pick<User, 'id' | 'name' | 'email' | 'admin' | 'last_login_at'> & {
+type UserRow = Pick<
+    User,
+    'id' | 'name' | 'email' | 'admin' | 'last_login_at'
+> & {
     impersonatable: boolean;
     modifiable: boolean;
 };

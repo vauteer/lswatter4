@@ -64,11 +64,19 @@ type GroupSelection = {
 
 // One entry per duplicate group, tracking which player to keep and which
 // ones (if any) the admin has ruled out as not actually being duplicates.
-const groupSelections = ref<GroupSelection[]>(
-    props.duplicateGroups.map((group) => ({
-        keepId: group[0].id,
-        excludedIds: new Set<number>(),
-    })),
+// Rebuilt whenever the groups change (e.g. after a merge redirects back
+// here with a shorter, re-indexed list) since indices aren't stable.
+const groupSelections = ref<GroupSelection[]>([]);
+
+watch(
+    () => props.duplicateGroups,
+    (groups) => {
+        groupSelections.value = groups.map((group) => ({
+            keepId: group[0].id,
+            excludedIds: new Set<number>(),
+        }));
+    },
+    { immediate: true },
 );
 
 function isExcluded(groupIndex: number, playerId: number): boolean {

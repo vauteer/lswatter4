@@ -1,6 +1,15 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+
+beforeEach(function () {
+    // Isolates profile-photo tests from the real storage disk - User::removeOrphanProfileImages()
+    // deletes any file not referenced by a user row in the (rolled-back) test database,
+    // so running it against the real disk would wipe real uploads.
+    Storage::fake('public');
+});
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -30,6 +39,71 @@ test('profile information can be updated', function () {
 
     expect($user->name)->toBe('Test User');
     expect($user->email)->toBe('test@example.com');
+});
+
+test('a profile photo can be uploaded', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->patch(route('profile.update'), [
+        'name' => $user->name,
+        'email' => $user->email,
+        'profile_image' => UploadedFile::fake()->image('avatar.jpg'),
+    ]);
+
+    $response->assertSessionHasNoErrors()->assertRedirect(route('profile.edit'));
+
+    $filename = $user->refresh()->profile_image;
+
+    expect($filename)->not->toBeNull();
+    Storage::disk('public')->assertExists(User::profileStoragePath($filename));
+});
+
+test('uploading a new profile photo replaces the old one', function () {
+    Storage::disk('public')->put(User::profileStoragePath('old.jpg'), 'fake image contents');
+    $user = User::factory()->create(['profile_image' => 'old.jpg']);
+
+    $response = $this->actingAs($user)->patch(route('profile.update'), [
+        'name' => $user->name,
+        'email' => $user->email,
+        'profile_image' => UploadedFile::fake()->image('avatar.jpg'),
+    ]);
+
+    $response->assertSessionHasNoErrors();
+
+    $filename = $user->refresh()->profile_image;
+
+    expect($filename)->not->toBe('old.jpg');
+    Storage::disk('public')->assertMissing(User::profileStoragePath('old.jpg'));
+    Storage::disk('public')->assertExists(User::profileStoragePath($filename));
+});
+
+test('a profile photo can be removed', function () {
+    Storage::disk('public')->put(User::profileStoragePath('old.jpg'), 'fake image contents');
+    $user = User::factory()->create(['profile_image' => 'old.jpg']);
+
+    $response = $this->actingAs($user)->patch(route('profile.update'), [
+        'name' => $user->name,
+        'email' => $user->email,
+        'remove_profile_image' => '1',
+    ]);
+
+    $response->assertSessionHasNoErrors();
+
+    expect($user->refresh()->profile_image)->toBeNull();
+    Storage::disk('public')->assertMissing(User::profileStoragePath('old.jpg'));
+});
+
+test('the profile photo must be an image', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->patch(route('profile.update'), [
+        'name' => $user->name,
+        'email' => $user->email,
+        'profile_image' => UploadedFile::fake()->create('document.pdf', 100),
+    ]);
+
+    $response->assertSessionHasErrors('profile_image');
+    expect($user->refresh()->profile_image)->toBeNull();
 });
 
 test('user can delete their account', function () {

@@ -5,13 +5,17 @@ namespace App\Models;
 use App\ActionType;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -26,6 +30,7 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable(['name', 'email', 'password', 'admin', 'profile_image'])]
 #[Hidden(['password', 'remember_token'])]
+#[Appends(['avatar'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -69,15 +74,19 @@ class User extends Authenticatable
         return $lastLogin?->at;
     }
 
+    protected function avatar(): Attribute
+    {
+        return Attribute::make(get: fn () => $this->profileURL());
+    }
+
     public function profileURL(): string
     {
         if ($this->profile_image) {
-            $path = public_path('storage/profile/'.$this->profile_image);
-            if (file_exists($path)) {
-                return asset('storage/profile/'.$this->profile_image);
-            } else {
-                $this->update(['profile_image' => null]);
+            if (self::profileDisk()->exists(self::profileStoragePath($this->profile_image))) {
+                return self::profileDisk()->url(self::profileStoragePath($this->profile_image));
             }
+
+            $this->update(['profile_image' => null]);
         }
 
         return 'https://www.gravatar.com/avatar/'.
@@ -85,20 +94,30 @@ class User extends Authenticatable
             '?d=mp&s=40';
     }
 
-    public static function profilePath(string $stub = ''): string
+    /**
+     * The "public" disk, on which profile images are stored - resolved
+     * lazily (not cached in a static) so tests can swap in Storage::fake().
+     */
+    public static function profileDisk(): Filesystem
     {
-        return storage_path('app/public/profile').
-            DIRECTORY_SEPARATOR.
-            trim($stub, DIRECTORY_SEPARATOR);
+        return Storage::disk('public');
+    }
+
+    public static function profileStoragePath(string $filename): string
+    {
+        return 'profile/'.trim($filename, '/');
     }
 
     public static function removeOrphanProfileImages(): int
     {
         $count = 0;
-        foreach (glob(self::profilePath('*')) ?: [] as $filename) {
-            $user = User::where('profile_image', basename($filename))->first();
+        $disk = self::profileDisk();
+
+        foreach ($disk->files('profile') as $path) {
+            $filename = basename($path);
+            $user = static::where('profile_image', $filename)->first();
             if ($user === null) {
-                unlink($filename);
+                $disk->delete($path);
                 $count++;
             }
         }

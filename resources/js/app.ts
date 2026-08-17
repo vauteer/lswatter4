@@ -1,4 +1,5 @@
 import { createInertiaApp } from '@inertiajs/vue3';
+import { provideSSRWidth } from '@vueuse/core';
 import { I18n, i18nVue } from 'laravel-vue-i18n';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -49,6 +50,15 @@ createInertiaApp({
     },
     withApp(app) {
         app.use(i18nVue, { lang: LOCALE, resolve: resolveTranslations });
+
+        // The sidebar's mobile/desktop split (useMediaQuery in
+        // ui/sidebar/SidebarProvider.vue) reads the real viewport width as
+        // soon as it runs on the client. Without a fixed assumed width for
+        // the server render and the client's first paint, that first
+        // client-side read can disagree with what the server rendered,
+        // causing a hydration mismatch. Fixing both to a desktop-sized
+        // width keeps them in sync; the real width takes over right after.
+        provideSSRWidth(1024, app);
     },
 });
 

@@ -6,13 +6,16 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * @property int $id
@@ -77,6 +80,107 @@ class Team extends Model
             'player1_id' => $player1->id,
             'player2_id' => $player2->id,
         ]);
+    }
+
+    /**
+     * Merge another team pairing the same two players into this one: its
+     * tournament registrations and fixtures are reassigned here, then it's
+     * deleted.
+     *
+     * @throws ValidationException if both teams are already registered
+     *                             (individually of each other) for the
+     *                             same tournament - merging them would
+     *                             make the team appear twice there.
+     */
+    public function mergeWith(Team $duplicate): void
+    {
+        $shared = $this->tournaments()->pluck('tournaments.id')
+            ->intersect($duplicate->tournaments()->pluck('tournaments.id'));
+
+        if ($shared->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'team_id' => __(':team1 and :team2 are both already registered for :tournaments - resolve that first.', [
+                    'team1' => (string) $this,
+                    'team2' => (string) $duplicate,
+                    'tournaments' => Tournament::whereIn('id', $shared)->pluck('name')->implode(', '),
+                ]),
+            ]);
+        }
+
+        DB::transaction(function () use ($duplicate) {
+            DB::table('team_tournament')->where('team_id', $duplicate->id)->update(['team_id' => $this->id]);
+            DB::table('fixtures')->where('team1_id', $duplicate->id)->update(['team1_id' => $this->id]);
+            DB::table('fixtures')->where('team2_id', $duplicate->id)->update(['team2_id' => $this->id]);
+
+            $duplicate->delete();
+        });
+    }
+
+    /**
+     * After merging two players into one, some of that player's teams may
+     * now pair them with the same partner as another of their teams -
+     * split across two rows only because the players hadn't been merged
+     * yet. Consolidates any such teams for the given player, skipping
+     * pairs that can't be merged because both already played the same
+     * tournament (left for manual resolution).
+     */
+    public static function consolidateDuplicatesForPlayer(int $playerId): void
+    {
+        $teams = static::where('player1_id', $playerId)->orWhere('player2_id', $playerId)->get();
+
+        $byPartner = $teams->groupBy(fn (self $team): int => $team->player1_id === $playerId ? $team->player2_id : $team->player1_id);
+
+        self::mergeDuplicatesWithinGroups($byPartner);
+    }
+
+    /**
+     * Consolidates every team pairing the same two players (regardless of
+     * which is player1/player2) into a single row, across the whole
+     * table - historical data can have several such rows for the same
+     * pair from before team reuse was enforced on registration. Skips
+     * pairs that can't be merged because more than one of them is already
+     * registered for the same tournament (left for manual resolution).
+     *
+     * @return int how many duplicate rows were merged away
+     */
+    public static function consolidateAllDuplicates(): int
+    {
+        $teams = static::all(['id', 'player1_id', 'player2_id']);
+
+        $byPair = $teams->groupBy(fn (self $team): string => implode('-', [
+            min($team->player1_id, $team->player2_id),
+            max($team->player1_id, $team->player2_id),
+        ]));
+
+        return self::mergeDuplicatesWithinGroups($byPair);
+    }
+
+    /**
+     * @param  SupportCollection<array-key, EloquentCollection<int, self>>  $groups
+     */
+    private static function mergeDuplicatesWithinGroups(SupportCollection $groups): int
+    {
+        $merged = 0;
+
+        foreach ($groups as $group) {
+            if ($group->count() < 2) {
+                continue;
+            }
+
+            $keeper = $group->shift();
+
+            foreach ($group as $duplicate) {
+                try {
+                    $keeper->mergeWith($duplicate);
+                    $merged++;
+                } catch (ValidationException) {
+                    // Both teams already played the same tournament - leave
+                    // them separate; needs manual resolution.
+                }
+            }
+        }
+
+        return $merged;
     }
 
     /**

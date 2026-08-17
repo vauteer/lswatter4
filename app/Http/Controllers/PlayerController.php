@@ -7,6 +7,7 @@ use App\Http\Requests\PlayerStoreRequest;
 use App\Http\Requests\PlayerUpdateRequest;
 use App\Http\Resources\PlayerResource;
 use App\Models\Player;
+use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -116,6 +117,11 @@ class PlayerController extends Controller
             foreach ($duplicates as $duplicate) {
                 $keeper->mergeWith($duplicate);
             }
+
+            // Merging the players can leave two of the keeper's teams
+            // pairing them with the same partner (previously split across
+            // separate rows because the players hadn't been merged yet).
+            Team::consolidateDuplicatesForPlayer($keeper->id);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __(':count players merged into :name.', [

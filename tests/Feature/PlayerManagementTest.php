@@ -245,6 +245,24 @@ test('admins can merge duplicate players via the players.merge endpoint', functi
     expect(Player::find($keeper->id))->not->toBeNull();
 });
 
+test('merging duplicate players also consolidates any teams that now pair them with the same partner', function () {
+    $admin = User::factory()->admin()->create();
+    $keeper = Player::factory()->create(['name' => 'Spänle Heinrich']);
+    $duplicate = Player::factory()->create(['name' => 'Spänle Heiner']);
+    $partner = Player::factory()->create();
+
+    $teamViaKeeper = Team::create(['player1_id' => $keeper->id, 'player2_id' => $partner->id]);
+    $teamViaDuplicate = Team::create(['player1_id' => $duplicate->id, 'player2_id' => $partner->id]);
+
+    $this->actingAs($admin)->post(route('players.merge'), [
+        'keep_id' => $keeper->id,
+        'player_ids' => [$keeper->id, $duplicate->id],
+    ]);
+
+    expect(Team::find($teamViaKeeper->id))->not->toBeNull();
+    expect(Team::find($teamViaDuplicate->id))->toBeNull();
+});
+
 test('merging more than two players at once merges all of them into the keeper', function () {
     $admin = User::factory()->admin()->create();
     $keeper = Player::factory()->create();

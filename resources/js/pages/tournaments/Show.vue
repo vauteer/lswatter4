@@ -123,16 +123,6 @@ function outcomeClass(fixture: FixtureRow, team: 1 | 2): string {
     return '';
 }
 
-function scoreClass(fixture: FixtureRow): string {
-    const winner = fixtureWinner(fixture);
-
-    if (winner === null || winner === 'tie') {
-        return '';
-    }
-
-    return 'text-green-700 dark:text-green-400';
-}
-
 function gameWinner(game: string): 1 | 2 {
     const [points1, points2] = game.split('-').map(Number);
 
@@ -390,7 +380,7 @@ function rankAccent(rank: number, total: number): string {
                             </div>
                         </td>
                         <td class="px-4 py-2 text-center">
-                            <div class="font-bold" :class="scoreClass(fixture)">
+                            <div class="font-bold">
                                 {{ fixture.scoreGames }}
                             </div>
                             <div class="text-muted-foreground">

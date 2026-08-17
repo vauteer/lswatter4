@@ -13,7 +13,7 @@ class Backup
 {
     public const string DATE_FORMAT = 'Y_m_d_H_i_s';
 
-    private const TABLES = ['tournaments', 'players', 'teams', 'fixtures', 'tracings', 'player_tournament', 'team_tournament', 'users'];
+    private const TABLES = ['tournaments', 'players', 'teams', 'fixtures', 'player_tournament', 'team_tournament', 'users'];
 
     /**
      * Dumps smaller than this many bytes are treated as failed, because a

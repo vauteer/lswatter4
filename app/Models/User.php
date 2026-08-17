@@ -57,14 +57,6 @@ class User extends Authenticatable
         return $this->hasMany(Tournament::class, 'created_by');
     }
 
-    /**
-     * @return HasMany<Tracing, $this>
-     */
-    public function tracings(): HasMany
-    {
-        return $this->hasMany(Tracing::class);
-    }
-
     protected function avatar(): Attribute
     {
         return Attribute::make(get: fn () => $this->profileURL());

@@ -57,6 +57,9 @@ class User extends Authenticatable
         return $this->hasMany(Tournament::class, 'created_by');
     }
 
+    /**
+     * @return Attribute<string, never>
+     */
     protected function avatar(): Attribute
     {
         return Attribute::make(get: fn () => $this->profileURL());

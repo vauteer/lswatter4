@@ -33,6 +33,12 @@ jobs:
 
       - name: Setup Application
         run: composer setup
+        env:
+          # Without this, Composer's package downloads from codeload.github.com
+          # are unauthenticated and share GitHub's 60/hr rate limit across
+          # every Actions runner's IP pool, which reliably 429s. Authenticating
+          # with the job's own token raises that to 5000/hr.
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
 
       - name: Run CI Checks
         run: composer ci:check

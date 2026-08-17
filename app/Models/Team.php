@@ -155,23 +155,28 @@ class Team extends Model
      * registered for the same tournament, so consolidateAllDuplicates()
      * can't merge them automatically.
      *
-     * @return SupportCollection<int, EloquentCollection<int, self>>
+     * @return SupportCollection<int, EloquentCollection<int, Team>>
      */
     public static function duplicatePairs(): SupportCollection
     {
-        $teams = static::with(['player1', 'player2'])->get();
+        $teams = self::with(['player1', 'player2'])->get();
 
+        // groupBy()/filter()/values() are inherited from the base Collection
+        // and return static (i.e. still an Eloquent Collection), which
+        // can't be generically typed as holding non-Model elements - toBase()
+        // converts the outer container to match the declared return type.
         return $teams
             ->groupBy(fn (self $team): string => implode('-', [
                 min($team->player1_id, $team->player2_id),
                 max($team->player1_id, $team->player2_id),
             ]))
             ->filter(fn (EloquentCollection $group): bool => $group->count() > 1)
-            ->values();
+            ->values()
+            ->toBase();
     }
 
     /**
-     * @param  SupportCollection<array-key, EloquentCollection<int, self>>  $groups
+     * @param  SupportCollection<array-key, EloquentCollection<int, Team>>  $groups
      */
     private static function mergeDuplicatesWithinGroups(SupportCollection $groups): int
     {

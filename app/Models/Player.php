@@ -263,7 +263,7 @@ class Player extends Model
      */
     private static function sortWords(string $name): string
     {
-        $words = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY);
+        $words = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         sort($words);
 
         return implode(' ', $words);
@@ -324,7 +324,7 @@ class Player extends Model
      */
     private static function canonicalizeNicknames(string $name): string
     {
-        $words = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY);
+        $words = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
         $words = array_map(fn (string $word): string => self::NICKNAMES[$word] ?? $word, $words);
 

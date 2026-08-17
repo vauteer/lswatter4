@@ -38,7 +38,9 @@ class ImpersonationController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Logged in as :name.', ['name' => $user->name])]);
 
-        return to_route('dashboard');
+        // Impersonation always targets a non-admin (see the guard above),
+        // and the dashboard is admin-only, so land on the tournaments list.
+        return to_route('tournaments.index');
     }
 
     /**

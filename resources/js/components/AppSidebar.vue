@@ -52,17 +52,13 @@ const mainNavItems = computed<NavItem[]>(() => [
         href: tournamentsIndex(),
         icon: Trophy,
     },
-    ...(page.props.auth.user
+    ...(page.props.auth.user?.admin
         ? [
               {
                   title: trans('Dashboard'),
                   href: dashboard(),
                   icon: LayoutGrid,
               },
-          ]
-        : []),
-    ...(page.props.auth.user?.admin
-        ? [
               {
                   title: trans('Users'),
                   href: usersIndex(),
@@ -103,7 +99,7 @@ const mainNavItems = computed<NavItem[]>(() => [
                     <SidebarMenuButton size="lg" as-child>
                         <Link
                             :href="
-                                page.props.auth.user
+                                page.props.auth.user?.admin
                                     ? dashboard()
                                     : tournamentsIndex()
                             "

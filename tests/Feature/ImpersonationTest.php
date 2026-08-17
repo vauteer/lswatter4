@@ -8,7 +8,7 @@ test('admins can log in as another user', function () {
 
     $response = $this->actingAs($admin)->post(route('users.impersonate', $user));
 
-    $response->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+    $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.index'));
     $this->assertAuthenticatedAs($user);
     expect(session('impersonator_id'))->toBe($admin->id);
 });

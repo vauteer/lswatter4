@@ -247,12 +247,17 @@
     ":attribute must be a valid date.": ":attribute muss ein gültiges Datum sein.",
     ":attribute must be a number.": ":attribute muss eine Zahl sein.",
 
-    "Welcome": "Willkommen",
-    "Let's get started": "Los geht's",
-    "Laravel has an incredibly rich ecosystem.": "Laravel hat ein unglaublich reichhaltiges Ökosystem.",
-    "We suggest starting with the following.": "Wir empfehlen, mit Folgendem zu beginnen.",
-    "Read the": "Lesen Sie die",
-    "Watch video tutorials at": "Sehen Sie sich Video-Tutorials an bei",
-    "Deploy now": "Jetzt bereitstellen",
-    "Entries :from–:to of :total": "Einträge :from–:to von :total"
+    "Entries :from–:to of :total": "Einträge :from–:to von :total",
+
+    "An overview of what needs your attention": "Ein Überblick über das, was Ihre Aufmerksamkeit benötigt",
+    "Possible duplicate players": "Mögliche doppelte Spieler",
+    "No duplicates found.": "Keine Duplikate gefunden.",
+    "Review and merge": "Prüfen und zusammenführen",
+    ":count unverified accounts": ":count unbestätigte Konten",
+    "All accounts verified.": "Alle Konten bestätigt.",
+    "Unverified": "Nicht bestätigt",
+    "View all users": "Alle Benutzer anzeigen",
+    "None": "Keine",
+    "This backup may be outdated.": "Dieses Backup könnte veraltet sein.",
+    "View backups": "Backups anzeigen"
 }

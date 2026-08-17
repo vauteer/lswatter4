@@ -95,10 +95,12 @@ watch(search, (value) => {
                 >
                     <tr>
                         <th class="px-4 py-2 font-medium">{{ $t('Name') }}</th>
-                        <th class="px-4 py-2 font-medium">
+                        <th class="hidden px-4 py-2 font-medium md:table-cell">
                             {{ $t('Email address') }}
                         </th>
-                        <th class="px-4 py-2 font-medium">{{ $t('Role') }}</th>
+                        <th class="hidden px-4 py-2 font-medium md:table-cell">
+                            {{ $t('Role') }}
+                        </th>
                         <th class="px-4 py-2 font-medium">
                             {{ $t('Last login') }}
                         </th>
@@ -122,10 +124,12 @@ watch(search, (value) => {
                         class="border-b border-sidebar-border/70 last:border-0 dark:border-sidebar-border"
                     >
                         <td class="px-4 py-2">{{ user.name }}</td>
-                        <td class="px-4 py-2 text-muted-foreground">
+                        <td
+                            class="hidden px-4 py-2 text-muted-foreground md:table-cell"
+                        >
                             {{ user.email }}
                         </td>
-                        <td class="px-4 py-2">
+                        <td class="hidden px-4 py-2 md:table-cell">
                             <Badge
                                 :variant="user.admin ? 'default' : 'secondary'"
                             >

@@ -143,10 +143,10 @@ function formatStart(start: string): string {
                         <th class="px-4 py-2 font-medium">
                             {{ $t('Start') }}
                         </th>
-                        <th class="px-4 py-2 font-medium">
+                        <th class="hidden px-4 py-2 font-medium md:table-cell">
                             {{ $t('Creator') }}
                         </th>
-                        <th class="px-4 py-2 font-medium">
+                        <th class="hidden px-4 py-2 font-medium md:table-cell">
                             {{ $t('Visibility') }}
                         </th>
                         <th class="px-4 py-2 text-right font-medium">
@@ -179,10 +179,12 @@ function formatStart(start: string): string {
                         <td class="px-4 py-2 text-muted-foreground">
                             {{ formatStart(tournament.start) }}
                         </td>
-                        <td class="px-4 py-2 text-muted-foreground">
+                        <td
+                            class="hidden px-4 py-2 text-muted-foreground md:table-cell"
+                        >
                             {{ tournament.creator }}
                         </td>
-                        <td class="px-4 py-2">
+                        <td class="hidden px-4 py-2 md:table-cell">
                             <Badge variant="outline">
                                 {{
                                     tournament.private

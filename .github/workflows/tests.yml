@@ -31,14 +31,37 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Setup Application
-        run: composer setup
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: |
+          for attempt in 1 2 3; do
+            composer install --no-interaction && exit 0
+            echo "composer install failed (attempt $attempt/3), retrying in 15s..."
+            sleep 15
+          done
+          exit 1
         env:
           # Without this, Composer's package downloads from codeload.github.com
           # are unauthenticated and share GitHub's 60/hr rate limit across
           # every Actions runner's IP pool, which reliably 429s. Authenticating
-          # with the job's own token raises that to 5000/hr.
+          # with the job's own token raises that to 5000/hr. The retry loop
+          # covers GitHub's separate, shorter-window secondary rate limit,
+          # which can still trip even when authenticated.
           COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
+
+      - name: Setup Application
+        run: composer setup
 
       - name: Run CI Checks
         run: composer ci:check

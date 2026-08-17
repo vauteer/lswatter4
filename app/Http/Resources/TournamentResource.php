@@ -35,8 +35,8 @@ class TournamentResource extends JsonResource
             'winpoints' => $this->winpoints,
             'private' => $this->private,
             'creator' => $this->creator->name,
-            'modifiable' => $request->user()->can('update', $this->resource),
-            'deletable' => $request->user()->can('delete', $this->resource),
+            'modifiable' => $request->user()?->can('update', $this->resource) ?? false,
+            'deletable' => $request->user()?->can('delete', $this->resource) ?? false,
             'registrationOpen' => $this->registrationOpen(),
         ];
     }

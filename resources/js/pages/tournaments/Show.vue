@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head, Link, setLayoutProps } from '@inertiajs/vue3';
+import { Form, Head, Link, setLayoutProps, usePage } from '@inertiajs/vue3';
 import { Pencil, Shuffle, Trophy, UserPlus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
@@ -64,6 +64,8 @@ const props = defineProps<{
     canDraw: boolean;
     drawn: boolean;
 }>();
+
+const page = usePage();
 
 setLayoutProps({
     breadcrumbs: [
@@ -228,7 +230,11 @@ function rankAccent(rank: number, total: number): string {
                 "
             />
             <div class="flex items-center gap-2">
-                <Button as-child variant="outline">
+                <Button
+                    v-if="page.props.auth.user"
+                    as-child
+                    variant="outline"
+                >
                     <a
                         :href="
                             lists({

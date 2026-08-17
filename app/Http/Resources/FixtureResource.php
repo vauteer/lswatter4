@@ -35,7 +35,7 @@ class FixtureResource extends JsonResource
             'scoreGames' => "{$this->team1_won}:{$this->team2_won}",
             'scorePoints' => "{$this->team1_points}:{$this->team2_points}",
             'games' => $this->score ? explode(' ', $this->score) : [],
-            'editable' => $request->user()->can('update', $this->resource),
+            'editable' => $request->user()?->can('update', $this->resource) ?? false,
         ];
     }
 }

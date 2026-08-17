@@ -5,8 +5,17 @@ use App\Models\Team;
 use App\Models\Tournament;
 use App\Models\User;
 
-test('guests cannot access the tournaments pages', function () {
-    $this->get(route('tournaments.index'))->assertRedirect(route('login'));
+test('guests can view the tournaments list', function () {
+    Tournament::factory()->create(['start' => now()->subDay()]);
+
+    $this->get(route('tournaments.index'))->assertOk();
+});
+
+test('guests cannot manage tournaments', function () {
+    $tournament = Tournament::factory()->create();
+
+    $this->get(route('tournaments.create'))->assertRedirect(route('login'));
+    $this->get(route('tournaments.edit', $tournament))->assertRedirect(route('login'));
 });
 
 test('authenticated users can view the tournaments list', function () {

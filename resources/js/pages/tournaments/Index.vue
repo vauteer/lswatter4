@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ListOrdered, Pencil, Plus, UserPlus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed, ref, watch } from 'vue';
@@ -41,6 +41,8 @@ const props = defineProps<{
     filters: { search: string; player_id: number | null };
     players: SelectOption[];
 }>();
+
+const page = usePage();
 
 defineOptions({
     layout: {
@@ -86,7 +88,11 @@ function formatStart(start: string): string {
                 :title="$t('Tournaments')"
                 :description="$t('Browse and manage tournaments')"
             />
-            <Button as-child variant="outline">
+            <Button
+                v-if="page.props.auth.user"
+                as-child
+                variant="outline"
+            >
                 <Link :href="create()">
                     <Plus class="size-4" />
                     {{ $t('New tournament') }}

@@ -9,7 +9,10 @@ use App\Http\Controllers\TournamentRegistrationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'Welcome')->name('home');
+// The tournaments list is also the public landing page, so guests can browse
+// and view tournaments without signing in.
+Route::get('/', [TournamentController::class, 'index'])->name('home');
+Route::get('tournaments', [TournamentController::class, 'index'])->name('tournaments.index');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
@@ -17,10 +20,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('users', UserController::class)->except('show');
     Route::resource('players', PlayerController::class)->except('show');
     Route::post('players/merge', [PlayerController::class, 'mergeDuplicates'])->name('players.merge');
-    Route::resource('tournaments', TournamentController::class)->except('show');
-    Route::get('tournaments/{tournament}', [TournamentController::class, 'show'])->name('tournaments.show');
-    Route::get('tournaments/{tournament}/lists/{round}', [TournamentController::class, 'tableLists'])->name('tournaments.lists');
+    Route::resource('tournaments', TournamentController::class)->except(['index', 'show']);
     Route::post('tournaments/{tournament}/draw', [TournamentController::class, 'draw'])->name('tournaments.draw');
+    Route::get('tournaments/{tournament}/lists/{round}', [TournamentController::class, 'tableLists'])->name('tournaments.lists');
 
     Route::get('tournaments/{tournament}/register', [TournamentRegistrationController::class, 'index'])->name('tournaments.register');
     Route::post('tournaments/{tournament}/register', [TournamentRegistrationController::class, 'store'])->name('tournaments.register.store');
@@ -42,5 +44,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Reachable by the impersonated session too, which is never admin.
     Route::delete('impersonate', [ImpersonationController::class, 'destroy'])->name('impersonate.destroy');
 });
+
+// Registered after the auth group's `tournaments/create` route, so that
+// static segment isn't shadowed by this wildcard `{tournament}` binding.
+Route::get('tournaments/{tournament}', [TournamentController::class, 'show'])->name('tournaments.show');
 
 require __DIR__.'/settings.php';

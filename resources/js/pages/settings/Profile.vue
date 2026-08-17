@@ -25,7 +25,8 @@ defineOptions({
 });
 
 const page = usePage();
-const user = computed(() => page.props.auth.user);
+// This page is only reachable when authenticated (settings routes require auth).
+const user = computed(() => page.props.auth.user!);
 </script>
 
 <template>

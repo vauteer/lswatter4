@@ -16,7 +16,7 @@ const impersonator = computed(() => page.props.auth.impersonator);
         <span>
             {{
                 $t('Logged in as :user — by :impersonator', {
-                    user: page.props.auth.user.name,
+                    user: page.props.auth.user!.name,
                     impersonator: impersonator.name,
                 })
             }}

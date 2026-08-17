@@ -48,16 +48,20 @@ onUnmounted(removeNavigateListener);
 // reactive to page.props rather than being computed once at setup.
 const mainNavItems = computed<NavItem[]>(() => [
     {
-        title: trans('Dashboard'),
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
         title: trans('Tournaments'),
         href: tournamentsIndex(),
         icon: Trophy,
     },
-    ...(page.props.auth.user.admin
+    ...(page.props.auth.user
+        ? [
+              {
+                  title: trans('Dashboard'),
+                  href: dashboard(),
+                  icon: LayoutGrid,
+              },
+          ]
+        : []),
+    ...(page.props.auth.user?.admin
         ? [
               {
                   title: trans('Users'),
@@ -97,7 +101,13 @@ const mainNavItems = computed<NavItem[]>(() => [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
+                        <Link
+                            :href="
+                                page.props.auth.user
+                                    ? dashboard()
+                                    : tournamentsIndex()
+                            "
+                        >
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>

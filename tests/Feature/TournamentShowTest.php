@@ -5,10 +5,16 @@ use App\Models\Team;
 use App\Models\Tournament;
 use App\Models\User;
 
-test('guests cannot view a tournament', function () {
-    $tournament = Tournament::factory()->create();
+test('guests cannot view a tournament that has not started yet', function () {
+    $tournament = Tournament::factory()->create(['start' => now()->addDay()]);
 
-    $this->get(route('tournaments.show', $tournament))->assertRedirect(route('login'));
+    $this->get(route('tournaments.show', $tournament))->assertForbidden();
+});
+
+test('guests can view a tournament that has already started', function () {
+    $tournament = Tournament::factory()->create(['start' => now()->subDay()]);
+
+    $this->get(route('tournaments.show', $tournament))->assertOk();
 });
 
 test('authenticated users can view a tournament with its fixtures and standings', function () {
@@ -101,4 +107,12 @@ test('the table lists PDF can be downloaded by authenticated users', function ()
 
     $response->assertOk();
     $response->assertHeader('Content-Type', 'application/pdf');
+});
+
+test('guests cannot download the table lists PDF', function () {
+    $tournament = Tournament::factory()->create(['start' => now()->subDay()]);
+
+    $response = $this->get(route('tournaments.lists', ['tournament' => $tournament, 'round' => 1]));
+
+    $response->assertRedirect(route('login'));
 });

@@ -7,12 +7,12 @@ use App\Models\User;
 
 class TournamentPolicy
 {
-    public function viewAny(User $user): bool
+    public function viewAny(?User $user): bool
     {
         return true;
     }
 
-    public function view(User $user, Tournament $tournament): bool
+    public function view(?User $user, Tournament $tournament): bool
     {
         return $tournament->canShow($user);
     }

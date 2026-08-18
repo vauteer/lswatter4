@@ -132,6 +132,8 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                         name="player2_id"
                         new-name-field="new_player2_name"
                         :options="allPlayers"
+                        clearable
+                        :clear-label="$t('No player')"
                         :placeholder="$t('Player 2 (optional)')"
                     />
                     <InputError :message="errors.player2_id" />

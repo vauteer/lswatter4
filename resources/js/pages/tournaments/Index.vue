@@ -126,6 +126,8 @@ function formatStart(start: string): string {
                 v-model="playerId"
                 :options="players"
                 :allow-create="false"
+                clearable
+                :clear-label="$t('All players')"
                 :placeholder="$t('Player')"
                 class="max-w-sm"
             />

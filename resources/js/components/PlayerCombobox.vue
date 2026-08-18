@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check, ChevronsUpDown, X } from '@lucide/vue';
+import { Check, ChevronsUpDown } from '@lucide/vue';
 import {
     ComboboxAnchor,
     ComboboxContent,
@@ -12,7 +12,7 @@ import {
     ComboboxTrigger,
     ComboboxViewport,
 } from 'reka-ui';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 import { cn } from '@/lib/utils';
 import type { SelectOption } from '@/types';
 
@@ -27,6 +27,9 @@ const props = withDefaults(
         class?: string;
         /** Whether typing a name with no match offers to create it. */
         allowCreate?: boolean;
+        /** Whether the dropdown offers an item to clear the current selection. */
+        clearable?: boolean;
+        clearLabel?: string;
         modelValue?: number | null;
     }>(),
     { allowCreate: true },
@@ -78,10 +81,17 @@ const showCreateOption = computed(
         !hasExactMatch.value,
 );
 
+const inputRef = useTemplateRef('inputRef');
+
 const handleSelect = (value: unknown) => {
     selectedId.value = (value as number | null) ?? null;
     newPlayerName.value = '';
     emit('update:modelValue', selectedId.value);
+    // Selecting an item natively focuses its (about to be unmounted) option
+    // element instead of the input, so the browser resets focus to <body>
+    // once it's removed - swallowing the next Tab press. Reclaim focus
+    // immediately, before that removal happens.
+    inputRef.value?.$el?.focus();
 };
 
 const handleCreateSelect = (event: Event) => {
@@ -97,11 +107,10 @@ function reset() {
     emit('update:modelValue', null);
 }
 
-const hasValue = computed(
-    () => selectedId.value !== null || newPlayerName.value !== '',
-);
-
-defineExpose({ reset });
+defineExpose({
+    reset,
+    focus: () => inputRef.value?.$el?.focus(),
+});
 </script>
 
 <template>
@@ -121,20 +130,12 @@ defineExpose({ reset });
             "
         >
             <ComboboxInput
+                ref="inputRef"
                 v-model="searchText"
                 class="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
                 :placeholder="placeholder"
                 :display-value="displayValue"
             />
-            <button
-                v-if="hasValue"
-                type="button"
-                class="shrink-0 text-muted-foreground outline-none hover:text-foreground"
-                :aria-label="$t('Clear selection')"
-                @click.stop="reset"
-            >
-                <X class="size-4" />
-            </button>
             <ComboboxTrigger>
                 <ChevronsUpDown class="size-4 shrink-0 text-muted-foreground" />
             </ComboboxTrigger>
@@ -153,6 +154,20 @@ defineExpose({ reset });
                     >
                         {{ $t('No results found.') }}
                     </ComboboxEmpty>
+                    <ComboboxItem
+                        v-if="clearable"
+                        :value="null"
+                        class="relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm text-muted-foreground outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+                    >
+                        {{ clearLabel ?? $t('All') }}
+                        <span
+                            class="absolute right-2 flex size-3.5 items-center justify-center"
+                        >
+                            <ComboboxItemIndicator>
+                                <Check class="size-4" />
+                            </ComboboxItemIndicator>
+                        </span>
+                    </ComboboxItem>
                     <ComboboxItem
                         v-for="option in options"
                         :key="option.id"

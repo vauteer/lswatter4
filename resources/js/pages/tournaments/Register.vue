@@ -2,7 +2,7 @@
 import { Form, Head, Link } from '@inertiajs/vue3';
 import { Link2, Shuffle, Trash2 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
-import { ref, useTemplateRef } from 'vue';
+import { ref, useTemplateRef, watch } from 'vue';
 import TournamentController from '@/actions/App/Http/Controllers/TournamentController';
 import TournamentRegistrationController from '@/actions/App/Http/Controllers/TournamentRegistrationController';
 import ConfirmActionDialog from '@/components/ConfirmActionDialog.vue';
@@ -20,7 +20,7 @@ type TeamRow = {
     player2: string;
 };
 
-defineProps<{
+const props = defineProps<{
     tournament: { id: number; name: string; registrationOpen: boolean };
     players: SelectOption[];
     teams: TeamRow[];
@@ -44,9 +44,24 @@ const player2Combobox = useTemplateRef('player2Combobox');
 function resetRegisterForm() {
     player1Combobox.value?.reset();
     player2Combobox.value?.reset();
+    player1Combobox.value?.focus();
 }
 
 const selectedForJoin = ref<number[]>([]);
+
+// Registering the joined team (or unregistering a checked single player)
+// removes them from `players`, but doesn't otherwise touch this selection -
+// drop ids that are no longer registered so a stale id can't keep the
+// "join" button enabled while nothing looks checked.
+watch(
+    () => props.players,
+    (players) => {
+        const ids = new Set(players.map((player) => player.id));
+        selectedForJoin.value = selectedForJoin.value.filter((id) =>
+            ids.has(id),
+        );
+    },
+);
 
 function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
     if (checked === true) {

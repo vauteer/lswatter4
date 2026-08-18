@@ -369,8 +369,8 @@ class Tournament extends Model
 
             $pdf->Ln(15 + (20 * $gamesPerRound));
             $pdf->SetFont('Arial', '', 12);
-            $pdf->Cell(60, 6, 'LS-Watter 3');
-            $pdf->Cell(60, 6, 'http://watter.it-ruler.de');
+            $pdf->Cell(60, 6, mb_convert_encoding(config('app.name'), 'ISO-8859-1', 'UTF-8'));
+            $pdf->Cell(60, 6, config('app.url'));
             $pdf->Ln(6);
             $pdf->Cell(120, 6, chr(169).' 2016 Gerald Lindner');
         }

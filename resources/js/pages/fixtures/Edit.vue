@@ -2,7 +2,7 @@
 import { Form, Head, Link } from '@inertiajs/vue3';
 import { X } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
-import { ref } from 'vue';
+import { onMounted, ref, useTemplateRef } from 'vue';
 import FixtureController from '@/actions/App/Http/Controllers/FixtureController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -40,6 +40,15 @@ defineOptions({
 });
 
 const score = ref(props.fixture.score ?? '');
+
+const scoreInput = useTemplateRef('scoreInput');
+
+// The autofocus attribute is a no-op here: this page is reached via an
+// Inertia client-side visit, not a full document parse, which is the
+// only time browsers honor it.
+onMounted(() => {
+    scoreInput.value?.$el?.focus();
+});
 </script>
 
 <template>
@@ -72,11 +81,11 @@ const score = ref(props.fixture.score ?? '');
                 </p>
                 <div class="relative">
                     <Input
+                        ref="scoreInput"
                         id="score"
                         name="score"
                         v-model="score"
                         autocomplete="off"
-                        autofocus
                         :placeholder="placeholder"
                         class="pr-9"
                     />

@@ -342,6 +342,7 @@ class Tournament extends Model
             ->get();
 
         $pdf = new Fpdf('L', 'mm', 'A4');
+        $pdf->SetTitle(mb_convert_encoding("{$this->name} - Tischlisten Runde {$round}", 'ISO-8859-1', 'UTF-8'));
 
         foreach ($fixtures as $fixture) {
             $pdf->AddPage();

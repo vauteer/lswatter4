@@ -14,8 +14,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 
 class TournamentController extends Controller
 {
@@ -99,8 +101,15 @@ class TournamentController extends Controller
     {
         Gate::authorize('view', $tournament);
 
+        $filename = "{$tournament->name} - Tischlisten Runde {$round}.pdf";
+
         return new HttpResponse($tournament->tableLists($round)->Output(), 200, [
             'Content-Type' => 'application/pdf',
+            'Content-Disposition' => HeaderUtils::makeDisposition(
+                HeaderUtils::DISPOSITION_INLINE,
+                $filename,
+                Str::ascii($filename),
+            ),
         ]);
     }
 

@@ -107,6 +107,10 @@ test('the table lists PDF can be downloaded by authenticated users', function ()
 
     $response->assertOk();
     $response->assertHeader('Content-Type', 'application/pdf');
+    $response->assertHeader('Content-Disposition');
+    expect($response->headers->get('Content-Disposition'))
+        ->toContain('inline')
+        ->toContain('Tischlisten Runde 1');
 });
 
 test('guests cannot download the table lists PDF', function () {

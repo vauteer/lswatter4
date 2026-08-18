@@ -33,4 +33,15 @@ export default defineConfig({
         }),
         i18n(),
     ],
+    build: {
+        // reka-ui bundles its own nested @vueuse/core with #__PURE__ comments
+        // in positions Rolldown's stricter parser doesn't recognize. Harmless
+        // (it only affects dead-code elimination in that one vendored file),
+        // but noisy — silence it.
+        rolldownOptions: {
+            checks: {
+                invalidAnnotation: false,
+            },
+        },
+    },
 });

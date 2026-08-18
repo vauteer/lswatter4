@@ -148,7 +148,10 @@ function formatStart(start: string): string {
                         <th class="hidden px-4 py-2 font-medium md:table-cell">
                             {{ $t('Creator') }}
                         </th>
-                        <th class="hidden px-4 py-2 font-medium md:table-cell">
+                        <th
+                            v-if="page.props.auth.user"
+                            class="hidden px-4 py-2 font-medium md:table-cell"
+                        >
                             {{ $t('Visibility') }}
                         </th>
                         <th class="px-4 py-2 text-right font-medium">
@@ -159,7 +162,7 @@ function formatStart(start: string): string {
                 <tbody>
                     <tr v-if="tournaments.data.length === 0">
                         <td
-                            colspan="5"
+                            :colspan="page.props.auth.user ? 5 : 4"
                             class="px-4 py-6 text-center text-muted-foreground"
                         >
                             {{ $t('No tournaments found.') }}
@@ -186,7 +189,10 @@ function formatStart(start: string): string {
                         >
                             {{ tournament.creator }}
                         </td>
-                        <td class="hidden px-4 py-2 md:table-cell">
+                        <td
+                            v-if="page.props.auth.user"
+                            class="hidden px-4 py-2 md:table-cell"
+                        >
                             <Badge variant="outline">
                                 {{
                                     tournament.private

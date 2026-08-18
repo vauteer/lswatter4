@@ -3,6 +3,10 @@
 namespace App\Models;
 
 use App\TournamentState;
+use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Carbon\CarbonInterface;
 use Fpdf\Fpdf;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -344,10 +348,27 @@ class Tournament extends Model
         $pdf = new Fpdf('L', 'mm', 'A4');
         $pdf->SetTitle(mb_convert_encoding("{$this->name} - Tischlisten Runde {$round}", 'ISO-8859-1', 'UTF-8'));
 
+        $qrPath = null;
+
+        if (! $this->private) {
+            $qrCode = (new Writer(
+                new ImageRenderer(
+                    new RendererStyle(300, 0),
+                    new ImagickImageBackEnd('png', 100, antialias: false)
+                )
+            ))->writeString(route('tournaments.show', $this));
+
+            $qrPath = tempnam(sys_get_temp_dir(), 'qr');
+            file_put_contents($qrPath, $qrCode);
+        }
+
         foreach ($fixtures as $fixture) {
             $pdf->AddPage();
             $pdf->SetFont('Arial', 'B', 16);
             $pdf->Cell(120, 10, 'Runde '.$fixture->round.' - Tisch '.$fixture->table_number, 0, 0);
+            if ($qrPath !== null) {
+                $pdf->Image($qrPath, 95, 5, 20, 20, 'png');
+            }
             $pdf->Ln(10);
             $pdf->SetFont('Arial', 'B', 12);
             $pdf->Cell(60, 7, 'Schreiber:');
@@ -373,6 +394,10 @@ class Tournament extends Model
             $pdf->Cell(60, 6, config('app.url'));
             $pdf->Ln(6);
             $pdf->Cell(120, 6, chr(169).' 2016 Gerald Lindner');
+        }
+
+        if ($qrPath !== null) {
+            unlink($qrPath);
         }
 
         return $pdf;

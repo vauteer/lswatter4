@@ -363,9 +363,6 @@ class Backup
             return;
         }
 
-        $root = trim((string) config('backup.s3.root'), '/');
-        $destination = ($root === '' ? '' : $root.'/').basename($filePath);
-
         $stream = fopen($filePath, 'r');
         if ($stream === false) {
             Log::error("Backup.copyToS3: could not open file: {$filePath}");
@@ -373,7 +370,7 @@ class Backup
             return;
         }
 
-        Storage::disk('s3')->put($destination, $stream);
+        Storage::disk('s3')->put(basename($filePath), $stream);
         fclose($stream);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Concerns\UserValidationRules;
 use App\Models\User;
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -19,8 +20,17 @@ class UserUpdateRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->route('user');
+        $rules = $this->userRules($user instanceof User ? $user->id : null);
 
-        return $this->userRules($user instanceof User ? $user->id : null);
+        if ($user instanceof User && $this->user()->is($user)) {
+            $rules['blocked'][] = function (string $attribute, mixed $value, Closure $fail): void {
+                if ($value) {
+                    $fail(__('You cannot block your own account.'));
+                }
+            };
+        }
+
+        return $rules;
     }
 
     /**

@@ -6,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import type { User } from '@/types';
 
 defineProps<{
-    user?: Pick<User, 'name' | 'email' | 'admin'>;
-    errors: Partial<Record<'name' | 'email' | 'admin', string>>;
+    user?: Pick<User, 'name' | 'email' | 'admin' | 'blocked'>;
+    errors: Partial<Record<'name' | 'email' | 'admin' | 'blocked', string>>;
 }>();
 </script>
 
@@ -51,5 +51,21 @@ defineProps<{
             <Label for="admin" class="font-normal">{{ $t('Admin') }}</Label>
         </div>
         <InputError :message="errors.admin" />
+    </div>
+
+    <div class="grid gap-2">
+        <div class="flex items-center gap-2">
+            <input type="hidden" name="blocked" value="0" />
+            <Checkbox
+                id="blocked"
+                name="blocked"
+                value="1"
+                :default-value="user?.blocked ?? false"
+            />
+            <Label for="blocked" class="font-normal">{{
+                $t('Blocked')
+            }}</Label>
+        </div>
+        <InputError :message="errors.blocked" />
     </div>
 </template>

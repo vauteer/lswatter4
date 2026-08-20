@@ -21,13 +21,14 @@ use Illuminate\Support\Facades\Storage;
  * @property string $email
  * @property string $password
  * @property bool $admin
+ * @property bool $blocked
  * @property string|null $profile_image
  * @property string|null $remember_token
  * @property Carbon|null $last_login_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password', 'admin', 'profile_image'])]
+#[Fillable(['name', 'email', 'password', 'admin', 'blocked', 'profile_image'])]
 #[Hidden(['password', 'remember_token'])]
 #[Appends(['avatar'])]
 class User extends Authenticatable
@@ -45,6 +46,7 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'admin' => 'boolean',
+            'blocked' => 'boolean',
             'last_login_at' => 'datetime',
         ];
     }
@@ -111,7 +113,7 @@ class User extends Authenticatable
         return $count;
     }
 
-    public function isUsed(): bool
+    public function hasTournaments(): bool
     {
         return $this->tournaments()->count() > 0;
     }
@@ -119,5 +121,10 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->admin;
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->blocked;
     }
 }

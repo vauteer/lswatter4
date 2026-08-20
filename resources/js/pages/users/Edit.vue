@@ -24,7 +24,7 @@ import { index } from '@/routes/users';
 import type { User } from '@/types';
 
 type Props = {
-    user: Pick<User, 'id' | 'name' | 'email' | 'admin'> & {
+    user: Pick<User, 'id' | 'name' | 'email' | 'admin' | 'blocked'> & {
         deletable: boolean;
     };
     backPage: number | null;

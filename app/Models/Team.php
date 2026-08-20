@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\RanksStandings;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -30,6 +31,8 @@ class Team extends Model
 {
     /** @use HasFactory<Factory<Team>> */
     use HasFactory;
+
+    use RanksStandings;
 
     /**
      * @return BelongsTo<Player, $this>
@@ -256,14 +259,7 @@ class Team extends Model
             ];
         }
 
-        $games = $pointsDifference = $pointsWon = [];
-        foreach ($standings as $id => $ranking) {
-            $games[$id] = $ranking['won'];
-            $pointsDifference[$id] = $ranking['pointsWon'] - $ranking['pointsLost'];
-            $pointsWon[$id] = $ranking['pointsWon'];
-        }
-
-        array_multisort($games, SORT_DESC, $pointsDifference, SORT_DESC, $pointsWon, SORT_DESC, $standings);
+        self::rankStandings($standings);
 
         $standings = array_slice($standings, 0, $limit);
 

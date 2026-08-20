@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Tournament;
 use App\Models\User;
 
 test('guests cannot access the users pages', function () {
@@ -73,6 +74,7 @@ test('admins can create a user', function () {
         'name' => 'Jane Doe',
         'email' => 'jane@example.com',
         'admin' => '0',
+        'blocked' => '0',
     ]);
 
     $response->assertSessionHasNoErrors()->assertRedirect(route('users.index', ['page' => 1]));
@@ -91,6 +93,7 @@ test('creating a user requires a unique email', function () {
         'name' => 'Jane Doe',
         'email' => $existing->email,
         'admin' => '0',
+        'blocked' => '0',
     ]);
 
     $response->assertSessionHasErrors('email');
@@ -104,12 +107,42 @@ test('admins can update a user', function () {
         'name' => 'Updated Name',
         'email' => $user->email,
         'admin' => '1',
+        'blocked' => '0',
     ]);
 
     $response->assertSessionHasNoErrors()->assertRedirect(route('users.index', ['page' => 1]));
 
     expect($user->refresh()->name)->toBe('Updated Name');
     expect($user->admin)->toBeTrue();
+});
+
+test('admins can block a user', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($admin)->put(route('users.update', $user), [
+        'name' => $user->name,
+        'email' => $user->email,
+        'admin' => '0',
+        'blocked' => '1',
+    ]);
+
+    $response->assertSessionHasNoErrors();
+    expect($user->refresh()->blocked)->toBeTrue();
+});
+
+test('admins cannot block their own account', function () {
+    $admin = User::factory()->admin()->create();
+
+    $response = $this->actingAs($admin)->put(route('users.update', $admin), [
+        'name' => $admin->name,
+        'email' => $admin->email,
+        'admin' => '1',
+        'blocked' => '1',
+    ]);
+
+    $response->assertSessionHasErrors('blocked');
+    expect($admin->refresh()->blocked)->toBeFalse();
 });
 
 test('updating a user redirects to the page they appear on', function () {
@@ -123,6 +156,7 @@ test('updating a user redirects to the page they appear on', function () {
         'name' => 'Zzz Target Updated',
         'email' => $user->email,
         'admin' => '0',
+        'blocked' => '0',
     ]);
 
     $response->assertRedirect(route('users.index', ['page' => 2]));
@@ -146,4 +180,15 @@ test('admins cannot delete their own account', function () {
 
     $response->assertForbidden();
     expect($admin->fresh())->not->toBeNull();
+});
+
+test('admins cannot delete a user who has created a tournament', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+    Tournament::factory()->create(['created_by' => $user->id]);
+
+    $response = $this->actingAs($admin)->delete(route('users.destroy', $user));
+
+    $response->assertForbidden();
+    expect($user->fresh())->not->toBeNull();
 });

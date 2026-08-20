@@ -34,6 +34,13 @@ class UserPolicy
 
         // Deleting your own account here would lock you out without the
         // password confirmation the profile settings page requires.
-        return ! $user->is($model);
+        if ($user->is($model)) {
+            return false;
+        }
+
+        // Deleting a user who already created a tournament would leave
+        // that tournament without a creator - the database's foreign key
+        // would reject it anyway, but this gives a friendlier error.
+        return ! $model->hasTournaments();
     }
 }

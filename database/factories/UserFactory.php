@@ -29,6 +29,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'admin' => false,
+            'blocked' => false,
             'remember_token' => Str::random(10),
         ];
     }
@@ -40,6 +41,16 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'admin' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is blocked.
+     */
+    public function blocked(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'blocked' => true,
         ]);
     }
 

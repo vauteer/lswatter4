@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\RanksStandings;
 use App\TournamentState;
 use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -39,6 +40,8 @@ class Tournament extends Model
 {
     /** @use HasFactory<Factory<Tournament>> */
     use HasFactory;
+
+    use RanksStandings;
 
     protected function casts(): array
     {
@@ -344,14 +347,7 @@ class Tournament extends Model
             $standings[$fixture->team2_id] = $away;
         }
 
-        $games = $pointsDifference = $pointsWon = [];
-        foreach ($standings as $id => $ranking) {
-            $games[$id] = $ranking['won'];
-            $pointsDifference[$id] = $ranking['pointsWon'] - $ranking['pointsLost'];
-            $pointsWon[$id] = $ranking['pointsWon'];
-        }
-
-        array_multisort($games, SORT_DESC, $pointsDifference, SORT_DESC, $pointsWon, SORT_DESC, $standings);
+        self::rankStandings($standings);
 
         return $standings;
     }

@@ -27,6 +27,7 @@ trait UserValidationRules
                     : Rule::unique(User::class)->ignore($userId),
             ],
             'admin' => ['required', 'boolean'],
+            'blocked' => ['required', 'boolean'],
         ];
     }
 
@@ -53,6 +54,7 @@ trait UserValidationRules
             'name' => __('Name'),
             'email' => __('Email address'),
             'admin' => __('Admin'),
+            'blocked' => __('Blocked'),
         ];
     }
 }

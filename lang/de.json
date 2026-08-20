@@ -24,6 +24,7 @@
     "Email address": "E-Mail-Adresse",
     "Role": "Rolle",
     "Admin": "Administrator",
+    "Blocked": "Gesperrt",
     "User": "Benutzer",
     "Last login": "Letzte Anmeldung",
     "Never": "Nie",
@@ -33,6 +34,8 @@
     "User created.": "Benutzer erstellt.",
     "User updated.": "Benutzer aktualisiert.",
     "User deleted.": "Benutzer gelöscht.",
+    "Your account has been blocked.": "Ihr Konto wurde gesperrt.",
+    "You cannot block your own account.": "Sie können Ihr eigenes Konto nicht sperren.",
 
     "Players": "Spieler",
     "Player": "Spieler",

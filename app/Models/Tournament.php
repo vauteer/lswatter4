@@ -12,6 +12,7 @@ use Fpdf\Fpdf;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -48,9 +49,11 @@ class Tournament extends Model
     }
 
     /**
+     * Players registered individually, not yet joined into a team.
+     *
      * @return BelongsToMany<Player, $this>
      */
-    public function players(): BelongsToMany
+    public function singlePlayers(): BelongsToMany
     {
         return $this->belongsToMany(Player::class)
             ->withTimestamps();
@@ -63,6 +66,22 @@ class Tournament extends Model
     {
         return $this->belongsToMany(Team::class)
             ->withTimestamps();
+    }
+
+    /**
+     * All players participating as part of a team registered for this
+     * tournament, as opposed to singlePlayers() who are registered
+     * individually.
+     *
+     * @return EloquentCollection<int, Player>
+     */
+    public function teamPlayers(): EloquentCollection
+    {
+        $playerIds = $this->teams()
+            ->get(['player1_id', 'player2_id'])
+            ->flatMap(fn (Team $team): array => [$team->player1_id, $team->player2_id]);
+
+        return Player::whereIn('id', $playerIds)->get();
     }
 
     /**
@@ -83,7 +102,7 @@ class Tournament extends Model
 
     public function currentPlayerCount(): int
     {
-        return $this->teams()->count() * 2 + $this->players()->count();
+        return $this->teams()->count() * 2 + $this->singlePlayers()->count();
     }
 
     public function drawn(): bool
@@ -118,7 +137,7 @@ class Tournament extends Model
 
         return $teamsCount >= 4
             && $teamsCount % 2 === 0
-            && $this->players()->count() === 0;
+            && $this->singlePlayers()->count() === 0;
     }
 
     public function started(): bool
@@ -214,9 +233,9 @@ class Tournament extends Model
     /**
      * @return Collection<int, array{name: string}>
      */
-    public function playersAsArray(): Collection
+    public function singlePlayersAsArray(): Collection
     {
-        return $this->players()
+        return $this->singlePlayers()
             ->get(['player_id', 'name'])
             ->mapWithKeys(function ($player) {
                 /** @var Player&object{player_id: int} $player */
@@ -456,7 +475,7 @@ class Tournament extends Model
     protected function playedBy(Builder $query, int $playerId): void
     {
         $query->where(fn (Builder $query) => $query
-            ->whereHas('players', fn (Builder $query) => $query->where('players.id', $playerId))
+            ->whereHas('singlePlayers', fn (Builder $query) => $query->where('players.id', $playerId))
             ->orWhereHas('teams', fn (Builder $query) => $query
                 ->where('teams.player1_id', $playerId)
                 ->orWhere('teams.player2_id', $playerId)));

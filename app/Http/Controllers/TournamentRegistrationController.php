@@ -25,7 +25,7 @@ class TournamentRegistrationController extends Controller
 
         return Inertia::render('tournaments/Register', [
             'tournament' => new TournamentResource($tournament),
-            'players' => $tournament->players()
+            'singlePlayers' => $tournament->singlePlayers()
                 ->orderBy('name')
                 ->get(['players.id', 'players.name']),
             'teams' => $tournament->teams()
@@ -63,7 +63,7 @@ class TournamentRegistrationController extends Controller
         $hasSecondPlayer = ($data['player2_id'] ?? null) !== null || ($data['new_player2_name'] ?? null) !== null;
 
         if (! $hasSecondPlayer) {
-            $tournament->players()->attach($player1);
+            $tournament->singlePlayers()->attach($player1);
 
             $message = $this->discardDrawIfNeeded($tournament, __(':name registered.', ['name' => $player1->name]));
             Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
@@ -104,7 +104,7 @@ class TournamentRegistrationController extends Controller
 
         [$player1Id, $player2Id] = $request->validated('player_ids');
 
-        $registeredPlayerIds = $tournament->players()
+        $registeredPlayerIds = $tournament->singlePlayers()
             ->whereIn('players.id', [$player1Id, $player2Id])
             ->pluck('players.id');
 
@@ -119,7 +119,7 @@ class TournamentRegistrationController extends Controller
 
         $team = Team::findOrCreateForPlayers($player1, $player2);
 
-        $tournament->players()->detach([$player1->id, $player2->id]);
+        $tournament->singlePlayers()->detach([$player1->id, $player2->id]);
         $tournament->teams()->syncWithoutDetaching($team);
 
         $message = $this->discardDrawIfNeeded($tournament, __(':player1 and :player2 joined into a team.', [
@@ -139,7 +139,7 @@ class TournamentRegistrationController extends Controller
         Gate::authorize('update', $tournament);
         abort_unless($tournament->registrationOpen(), 422);
 
-        $tournament->players()->detach($player);
+        $tournament->singlePlayers()->detach($player);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __(':name unregistered.', ['name' => $player->name])]);
 

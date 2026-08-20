@@ -185,11 +185,11 @@ test('merging a player reassigns their individual tournament registration', func
     $keeper = Player::factory()->create();
     $duplicate = Player::factory()->create();
     $tournament = Tournament::factory()->create();
-    $tournament->players()->attach($duplicate);
+    $tournament->singlePlayers()->attach($duplicate);
 
     $keeper->mergeWith($duplicate);
 
-    expect($tournament->players()->whereKey($keeper->id)->exists())->toBeTrue();
+    expect($tournament->singlePlayers()->whereKey($keeper->id)->exists())->toBeTrue();
     expect(Player::find($duplicate->id))->toBeNull();
 });
 
@@ -209,7 +209,7 @@ test('merging is rejected when both players are individually registered for the 
     $keeper = Player::factory()->create();
     $duplicate = Player::factory()->create();
     $tournament = Tournament::factory()->create();
-    $tournament->players()->attach([$keeper->id, $duplicate->id]);
+    $tournament->singlePlayers()->attach([$keeper->id, $duplicate->id]);
 
     expect(fn () => $keeper->mergeWith($duplicate))
         ->toThrow(ValidationException::class);
@@ -223,7 +223,7 @@ test('merging is rejected when one player is registered individually and the oth
     $partner = Player::factory()->create();
     $team = Team::create(['player1_id' => $duplicate->id, 'player2_id' => $partner->id]);
     $tournament = Tournament::factory()->create();
-    $tournament->players()->attach($keeper);
+    $tournament->singlePlayers()->attach($keeper);
     $tournament->teams()->attach($team);
 
     expect(fn () => $keeper->mergeWith($duplicate))
@@ -301,7 +301,7 @@ test('merging via the endpoint rolls back entirely when a conflict is found part
     $safeDuplicate = Player::factory()->create();
     $conflictingDuplicate = Player::factory()->create();
     $tournament = Tournament::factory()->create();
-    $tournament->players()->attach([$keeper->id, $conflictingDuplicate->id]);
+    $tournament->singlePlayers()->attach([$keeper->id, $conflictingDuplicate->id]);
 
     $response = $this->actingAs($admin)->post(route('players.merge'), [
         'keep_id' => $keeper->id,

@@ -82,7 +82,7 @@ test('the tournaments list can be filtered by a player, whether registered indiv
     $player = Player::factory()->create();
 
     $individualTournament = Tournament::factory()->create(['start' => now()->subDay()]);
-    $individualTournament->players()->attach($player);
+    $individualTournament->singlePlayers()->attach($player);
 
     $team = Team::factory()->create(['player1_id' => $player->id]);
     $teamTournament = Tournament::factory()->create(['start' => now()->subDays(2)]);

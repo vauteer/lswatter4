@@ -22,7 +22,7 @@ type TeamRow = {
 
 const props = defineProps<{
     tournament: { id: number; name: string; registrationOpen: boolean };
-    players: SelectOption[];
+    singlePlayers: SelectOption[];
     teams: TeamRow[];
     allPlayers: SelectOption[];
     canDraw: boolean;
@@ -50,13 +50,13 @@ function resetRegisterForm() {
 const selectedForJoin = ref<number[]>([]);
 
 // Registering the joined team (or unregistering a checked single player)
-// removes them from `players`, but doesn't otherwise touch this selection -
-// drop ids that are no longer registered so a stale id can't keep the
-// "join" button enabled while nothing looks checked.
+// removes them from `singlePlayers`, but doesn't otherwise touch this
+// selection - drop ids that are no longer registered so a stale id can't
+// keep the "join" button enabled while nothing looks checked.
 watch(
-    () => props.players,
-    (players) => {
-        const ids = new Set(players.map((player) => player.id));
+    () => props.singlePlayers,
+    (singlePlayers) => {
+        const ids = new Set(singlePlayers.map((player) => player.id));
         selectedForJoin.value = selectedForJoin.value.filter((id) =>
             ids.has(id),
         );
@@ -289,7 +289,7 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-if="players.length === 0">
+                        <tr v-if="singlePlayers.length === 0">
                             <td
                                 colspan="3"
                                 class="px-4 py-6 text-center text-muted-foreground"
@@ -298,7 +298,7 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                             </td>
                         </tr>
                         <tr
-                            v-for="player in players"
+                            v-for="player in singlePlayers"
                             :key="player.id"
                             class="border-b border-sidebar-border/70 last:border-0 dark:border-sidebar-border"
                         >

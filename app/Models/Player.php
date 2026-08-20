@@ -62,7 +62,7 @@ class Player extends Model
 
     public function isRegisteredFor(Tournament $tournament): bool
     {
-        return $tournament->players()->where('players.id', $this->id)->exists()
+        return $tournament->singlePlayers()->where('players.id', $this->id)->exists()
             || $tournament->teams()
                 ->where(fn (Builder $query) => $query
                     ->where('teams.player1_id', $this->id)

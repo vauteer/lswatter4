@@ -30,7 +30,7 @@ test('a tournament with an odd number of teams cannot be drawn', function () {
 test('a tournament with single players still registered cannot be drawn', function () {
     $tournament = Tournament::factory()->create();
     registerTeams($tournament, 4);
-    $tournament->players()->attach(Player::factory()->create());
+    $tournament->singlePlayers()->attach(Player::factory()->create());
 
     expect($tournament->canDraw())->toBeFalse();
 });
@@ -40,6 +40,20 @@ test('a tournament with four or more teams, evenly matched, and no single player
     registerTeams($tournament, 4);
 
     expect($tournament->canDraw())->toBeTrue();
+});
+
+test('teamPlayers() returns everyone participating as part of a team, but not single players', function () {
+    $tournament = Tournament::factory()->create();
+    registerTeams($tournament, 2);
+    $singlePlayer = Player::factory()->create();
+    $tournament->singlePlayers()->attach($singlePlayer);
+
+    $teamPlayerIds = $tournament->teams()
+        ->get(['player1_id', 'player2_id'])
+        ->flatMap(fn (Team $team) => [$team->player1_id, $team->player2_id]);
+
+    expect($tournament->teamPlayers()->pluck('id'))->toEqualCanonicalizing($teamPlayerIds);
+    expect($tournament->teamPlayers()->pluck('id'))->not->toContain($singlePlayer->id);
 });
 
 test('drawing creates one fixture per table per round', function () {

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,7 +27,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 #[Fillable(['tournament_id', 'team1_id', 'team2_id', 'round', 'table_number', 'score', 'team1_won', 'team2_won', 'team1_points', 'team2_points'])]
-#[Hidden(['pivot'])]
 class Fixture extends Model
 {
     /** @use HasFactory<Factory<Fixture>> */

@@ -237,13 +237,13 @@ class Player extends Model
             foreach (array_slice($ids, $index + 1) as $idB) {
                 if (self::namesLikelyMatch($normalized[$idA], $normalized[$idB])
                     || self::namesLikelyMatch($wordSorted[$idA], $wordSorted[$idB])) {
-                    self::union($parent, $idA, $idB);
+                    self::unionGroups($parent, $idA, $idB);
                 }
             }
         }
 
         return $players
-            ->groupBy(fn (self $player): int => self::find($parent, $player->id))
+            ->groupBy(fn (self $player): int => self::findRoot($parent, $player->id))
             ->filter(fn (Collection $group): bool => $group->count() > 1)
             ->values();
     }
@@ -295,6 +295,7 @@ class Player extends Model
         'michl' => 'michael',
         'gaby' => 'gabriele',
         'kathi' => 'katharina',
+        'kath' => 'katharina',
         'kaethe' => 'katharina',
         'grete' => 'margarete',
         'gretel' => 'margarete',
@@ -334,10 +335,10 @@ class Player extends Model
     /**
      * @param  array<int, int>  $parent
      */
-    private static function find(array &$parent, int $id): int
+    private static function findRoot(array &$parent, int $id): int
     {
         if ($parent[$id] !== $id) {
-            $parent[$id] = self::find($parent, $parent[$id]);
+            $parent[$id] = self::findRoot($parent, $parent[$id]);
         }
 
         return $parent[$id];
@@ -346,10 +347,10 @@ class Player extends Model
     /**
      * @param  array<int, int>  $parent
      */
-    private static function union(array &$parent, int $a, int $b): void
+    private static function unionGroups(array &$parent, int $a, int $b): void
     {
-        $rootA = self::find($parent, $a);
-        $rootB = self::find($parent, $b);
+        $rootA = self::findRoot($parent, $a);
+        $rootB = self::findRoot($parent, $b);
 
         if ($rootA !== $rootB) {
             $parent[$rootB] = $rootA;

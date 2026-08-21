@@ -23,20 +23,27 @@ class TournamentRegistrationController extends Controller
     {
         Gate::authorize('update', $tournament);
 
+        $singlePlayers = $tournament->singlePlayers()
+            ->orderBy('name')
+            ->get(['players.id', 'players.name']);
+
+        $teams = $tournament->teams()->with(['player1', 'player2'])->get();
+
         return Inertia::render('tournaments/Register', [
             'tournament' => new TournamentResource($tournament),
-            'singlePlayers' => $tournament->singlePlayers()
-                ->orderBy('name')
-                ->get(['players.id', 'players.name']),
-            'teams' => $tournament->teams()
-                ->with(['player1', 'player2'])
-                ->get()
-                ->map(fn (Team $team) => [
-                    'id' => $team->id,
-                    'player1' => $team->player1->name,
-                    'player2' => $team->player2->name,
-                ]),
+            'singlePlayers' => $singlePlayers,
+            'teams' => $teams->map(fn (Team $team) => [
+                'id' => $team->id,
+                'player1' => $team->player1->name,
+                'player2' => $team->player2->name,
+            ]),
             'allPlayers' => Player::orderBy('name')->get(['id', 'name']),
+            // So the registration form can rule out anyone already taking
+            // part, instead of letting the user pick them and bounce off
+            // the "already registered" validation error.
+            'registeredPlayerIds' => $singlePlayers->pluck('id')
+                ->merge($teams->flatMap(fn (Team $team): array => [$team->player1_id, $team->player2_id]))
+                ->values(),
             'canDraw' => $tournament->canDraw(),
             'drawn' => $tournament->drawn(),
         ]);

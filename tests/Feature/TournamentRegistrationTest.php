@@ -28,6 +28,23 @@ test('creators can view the registration page for their own tournament', functio
     $this->actingAs($user)->get(route('tournaments.register', $tournament))->assertOk();
 });
 
+test('the registration page lists the ids of every already registered player', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+    $single = Player::factory()->create();
+    $team = Team::factory()->create();
+    $unregistered = Player::factory()->create();
+    $tournament->singlePlayers()->attach($single);
+    $tournament->teams()->attach($team);
+
+    $this->actingAs($user)->get(route('tournaments.register', $tournament))
+        ->assertInertia(fn ($page) => $page
+            ->where('registeredPlayerIds', fn ($ids) => collect($ids)->sort()->values()->all()
+                === collect([$single->id, $team->player1_id, $team->player2_id])->sort()->values()->all())
+            ->where('allPlayers', fn ($players) => collect($players)->pluck('id')->contains($unregistered->id))
+        );
+});
+
 test('a single player can be registered by name, creating the player on the fly', function () {
     $user = User::factory()->create();
     $tournament = Tournament::factory()->create(['created_by' => $user->id]);

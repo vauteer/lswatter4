@@ -12,25 +12,23 @@ import {
     ComboboxTrigger,
     ComboboxViewport,
 } from 'reka-ui';
-import {
-    computed,
-    nextTick,
-    onBeforeUnmount,
-    onMounted,
-    ref,
-    useTemplateRef,
-    watch,
-} from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 import { cn } from '@/lib/utils';
 import type { SelectOption } from '@/types';
 
 const props = withDefaults(
     defineProps<{
+        /** Id of the rendered input, so a `<Label for="...">` can target it. */
+        id?: string;
         /** Hidden input name carrying the selected player's id. Omit outside a form. */
         name?: string;
         /** Hidden input name carrying a not-yet-existing player's typed name. Omit outside a form. */
         newNameField?: string;
         options: SelectOption[];
+        /** Options that are listed but cannot be picked, e.g. already registered players. */
+        disabledIds?: number[];
+        /** Suffix explaining why the `disabledIds` options can't be picked. */
+        disabledLabel?: string;
         placeholder?: string;
         class?: string;
         /** Whether typing a name with no match offers to create it. */
@@ -40,161 +38,153 @@ const props = withDefaults(
         clearLabel?: string;
         modelValue?: number | null;
     }>(),
-    { allowCreate: true },
+    { allowCreate: true, disabledIds: () => [] },
 );
 
 const emit = defineEmits<{
     'update:modelValue': [value: number | null];
 }>();
 
-// This sentinel never reaches ComboboxRoot's own modelValue - selecting it
-// is intercepted and handled entirely below - so it only has to be a
-// value distinguishable from every real (positive) player id.
-const CREATE_NEW_VALUE = -1;
+// `players.name` is unique, so the typed text says everything on its own:
+// text matching an option *is* that selection, any other non-empty text is
+// a new player to create. Deriving the selection and both hidden inputs
+// from it - instead of mirroring Reka's selection in a second piece of
+// state - leaves nothing to keep in sync when the field is blurred, tabbed
+// out of, or submitted with Enter.
+const text = ref('');
 
-const selectedId = ref<number | null>(props.modelValue ?? null);
-const searchText = ref('');
-const newPlayerName = ref('');
+const trimmedText = computed(() => text.value.trim());
+
+const matchedOption = computed(
+    () =>
+        props.options.find(
+            (option) =>
+                option.name.toLowerCase() === trimmedText.value.toLowerCase(),
+        ) ?? null,
+);
+
+const selectedId = computed(() => matchedOption.value?.id ?? null);
+
+const newPlayerName = computed(() =>
+    props.allowCreate &&
+    trimmedText.value !== '' &&
+    matchedOption.value === null
+        ? trimmedText.value
+        : '',
+);
+
+const nameOf = (id?: number | null) =>
+    props.options.find((option) => option.id === id)?.name ?? '';
+
+const isDisabled = (id: number) => props.disabledIds.includes(id);
 
 watch(
     () => props.modelValue,
     (value) => {
-        selectedId.value = value ?? null;
+        if ((value ?? null) !== selectedId.value) {
+            text.value = nameOf(value);
+        }
     },
+    { immediate: true },
 );
 
-const displayValue = (value: unknown) => {
-    if (value === null || value === undefined) {
-        // Reka resets the input's search text to this on blur. Falling
-        // back to the pending create-name (empty string otherwise) keeps
-        // a confirmed "create new" choice from vanishing when the field
-        // loses focus.
-        return newPlayerName.value;
-    }
-
-    return props.options.find((option) => option.id === value)?.name ?? '';
-};
-
-const hasExactMatch = computed(() =>
-    props.options.some(
-        (option) =>
-            option.name.toLowerCase() === searchText.value.trim().toLowerCase(),
-    ),
-);
-
-const showCreateOption = computed(
-    () =>
-        props.allowCreate &&
-        searchText.value.trim() !== '' &&
-        !hasExactMatch.value,
-);
+watch(selectedId, (value) => emit('update:modelValue', value));
 
 const inputRef = useTemplateRef('inputRef');
 
+const isOpen = ref(false);
+
+// Reka pops the list open whenever the input gains focus, which is what the
+// user wants when they tab or click in, but not when the component moves
+// focus there itself - after picking an item, or after the form was
+// submitted, the list has just done its job. Refuse those opens; the list
+// still comes back as soon as the user types or clicks.
+let keepClosedOnFocus = false;
+
+function focusInput() {
+    keepClosedOnFocus = true;
+    isOpen.value = false;
+    inputRef.value?.$el?.focus();
+    keepClosedOnFocus = false;
+}
+
 const handleSelect = (value: unknown) => {
-    selectedId.value = (value as number | null) ?? null;
-    newPlayerName.value = '';
-    emit('update:modelValue', selectedId.value);
+    // The "create" item carries the typed name itself; every other item
+    // carries a player id, or null for the clear item.
+    text.value =
+        typeof value === 'string' ? value : nameOf(value as number | null);
+
     // Selecting an item natively focuses its (about to be unmounted) option
     // element instead of the input, so the browser resets focus to <body>
     // once it's removed - swallowing the next Tab press. Reclaim focus
     // immediately, before that removal happens.
-    inputRef.value?.$el?.focus();
+    focusInput();
 };
 
-const commitPendingCreate = () => {
-    if (!showCreateOption.value) {
+const handleOpenChange = (open: boolean) => {
+    if (open && keepClosedOnFocus) {
         return;
     }
 
-    newPlayerName.value = searchText.value.trim();
-    selectedId.value = null;
-    emit('update:modelValue', null);
+    isOpen.value = open;
+
+    // Text naming neither an existing player nor a new one to create - a
+    // half-typed name in a combobox that can't create - is not something
+    // the form could submit, so don't leave it sitting there looking like
+    // a selection.
+    if (!open && selectedId.value === null && newPlayerName.value === '') {
+        text.value = '';
+    }
 };
 
-const handleCreateSelect = (event: Event) => {
-    event.preventDefault();
-    commitPendingCreate();
+const highlighted = ref<{ ref: HTMLElement; value: unknown }>();
+
+const handleHighlight = (
+    item: { ref: HTMLElement; value: unknown } | undefined,
+) => {
+    highlighted.value = item;
 };
 
-// Reka only highlights an item once the user has navigated with arrow keys
-// (or, inconsistently, right after the list goes from empty to non-empty -
-// see reka-ui's ComboboxInput). Typing a brand-new name and pressing Enter
-// right away usually leaves nothing highlighted, so Reka's own Enter
-// handling silently no-ops (it bails out unless the highlighted element is
-// still mounted - see reka-ui's ListboxRoot#onKeydownEnter) and the keypress
-// falls through to submit the surrounding form with empty fields. Track the
-// highlighted item's element the same way, so Enter can fall back to
-// confirming the create option in that case, without stealing Enter from an
-// item the user did arrow down to.
-const highlightedElement = ref<HTMLElement | null>(null);
+// Reka handles Enter itself, but only while an item is really highlighted
+// (see reka-ui's ListboxRoot#onKeydownEnter); otherwise the keypress falls
+// through to the browser's submit-on-Enter. Since the hidden inputs already
+// follow the typed text, picking the highlighted "create" item would add
+// nothing, so let Enter submit in that case too rather than making the user
+// press it twice.
+const handleEnterCapture = (event: KeyboardEvent) => {
+    const picksExistingOption =
+        highlighted.value?.ref.isConnected === true &&
+        highlighted.value.value !== trimmedText.value;
 
-const handleHighlight = (item: { ref: HTMLElement } | undefined) => {
-    highlightedElement.value = item?.ref ?? null;
-};
+    const form = (event.target as HTMLElement).closest('form');
 
-const handleEnterCapture = async (event: KeyboardEvent) => {
-    if (highlightedElement.value?.isConnected || !showCreateOption.value) {
+    if (picksExistingOption || !form) {
         return;
     }
 
     event.preventDefault();
     event.stopPropagation();
-    commitPendingCreate();
-
-    // Confirming the create option consumes this Enter press instead of
-    // letting it reach the browser's native submit-on-Enter behaviour (see
-    // above), so without this the hidden inputs are correctly filled in but
-    // the user has to press Enter a second time to actually submit. Submit
-    // explicitly instead, once the hidden inputs have picked up the new
-    // value, so a single Enter both creates and registers the player.
-    await nextTick();
-    (event.target as HTMLElement | null)?.closest('form')?.requestSubmit();
+    form.requestSubmit();
 };
-
-// Reka resets the input's search text on blur (see reka-ui's ComboboxRoot
-// `resetSearchTermOnBlur`, on by default) by falling back to `displayValue`
-// of the current (still null) selection - i.e. the pending create name.
-// Nothing sets that name unless the user explicitly pressed Enter or
-// clicked the "create" option, so tabbing straight to the next field after
-// typing a brand-new name wiped it. Commit the pending name here too, so
-// tabbing to fill in a second new player doesn't lose the first.
-const handleBlur = () => {
-    commitPendingCreate();
-};
-
-// Reka's ComboboxInput sits behind several wrapper components (ListboxFilter,
-// Primitive) before reaching the native <input>, and a plain `@blur` on
-// <ComboboxInput> here does not reliably fall through that chain. Attach
-// directly to the real element instead.
-onMounted(() => {
-    inputRef.value?.$el?.addEventListener('blur', handleBlur);
-});
-
-onBeforeUnmount(() => {
-    inputRef.value?.$el?.removeEventListener('blur', handleBlur);
-});
 
 function reset() {
-    selectedId.value = null;
-    searchText.value = '';
-    newPlayerName.value = '';
-    emit('update:modelValue', null);
+    text.value = '';
 }
 
-defineExpose({
-    reset,
-    focus: () => inputRef.value?.$el?.focus(),
-});
+defineExpose({ reset, focus: focusInput });
 </script>
 
 <template>
     <ComboboxRoot
         :model-value="selectedId"
+        :open="isOpen"
         open-on-click
         open-on-focus
+        :reset-search-term-on-blur="false"
+        :reset-search-term-on-select="false"
         class="relative"
         @update:model-value="handleSelect"
+        @update:open="handleOpenChange"
         @highlight="handleHighlight"
     >
         <ComboboxAnchor
@@ -207,11 +197,11 @@ defineExpose({
             @keydown.enter.capture="handleEnterCapture"
         >
             <ComboboxInput
+                :id="id"
                 ref="inputRef"
-                v-model="searchText"
+                v-model="text"
                 class="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
                 :placeholder="placeholder"
-                :display-value="displayValue"
             />
             <ComboboxTrigger>
                 <ChevronsUpDown class="size-4 shrink-0 text-muted-foreground" />
@@ -226,7 +216,7 @@ defineExpose({
             >
                 <ComboboxViewport class="p-1">
                     <ComboboxEmpty
-                        v-if="!showCreateOption"
+                        v-if="!newPlayerName"
                         class="py-4 text-center text-sm text-muted-foreground"
                     >
                         {{ $t('No results found.') }}
@@ -249,9 +239,16 @@ defineExpose({
                         v-for="option in options"
                         :key="option.id"
                         :value="option.id"
-                        class="relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+                        :disabled="isDisabled(option.id)"
+                        class="relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
                     >
                         {{ option.name }}
+                        <span
+                            v-if="disabledLabel && isDisabled(option.id)"
+                            class="text-xs text-muted-foreground"
+                        >
+                            {{ disabledLabel }}
+                        </span>
                         <span
                             class="absolute right-2 flex size-3.5 items-center justify-center"
                         >
@@ -261,14 +258,12 @@ defineExpose({
                         </span>
                     </ComboboxItem>
                     <ComboboxItem
-                        v-if="showCreateOption"
-                        :key="CREATE_NEW_VALUE"
-                        :value="CREATE_NEW_VALUE"
-                        :text-value="searchText"
+                        v-if="newPlayerName"
+                        :value="newPlayerName"
+                        :text-value="newPlayerName"
                         class="relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm text-primary outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
-                        @select="handleCreateSelect"
                     >
-                        {{ $t('Create ":name"', { name: searchText.trim() }) }}
+                        {{ $t('Create ":name"', { name: newPlayerName }) }}
                     </ComboboxItem>
                 </ComboboxViewport>
             </ComboboxContent>

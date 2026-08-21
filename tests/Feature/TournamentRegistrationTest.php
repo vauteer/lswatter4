@@ -134,6 +134,31 @@ test('a registered single player can be unregistered', function () {
     expect($tournament->singlePlayers()->count())->toBe(0);
 });
 
+test('unregistering a player who was never used elsewhere deletes them', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+    $player = Player::factory()->create();
+    $tournament->singlePlayers()->attach($player);
+
+    $this->actingAs($user)->delete(route('tournaments.register.players.destroy', [$tournament, $player]))
+        ->assertSessionHasNoErrors();
+
+    expect(Player::find($player->id))->toBeNull();
+});
+
+test('unregistering a player who is still used elsewhere keeps them', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+    $player = Player::factory()->create();
+    $tournament->singlePlayers()->attach($player);
+    Tournament::factory()->create()->singlePlayers()->attach($player);
+
+    $this->actingAs($user)->delete(route('tournaments.register.players.destroy', [$tournament, $player]))
+        ->assertSessionHasNoErrors();
+
+    expect(Player::find($player->id))->not->toBeNull();
+});
+
 test('a registered team can be unregistered', function () {
     $user = User::factory()->create();
     $tournament = Tournament::factory()->create(['created_by' => $user->id]);
@@ -144,6 +169,49 @@ test('a registered team can be unregistered', function () {
 
     $response->assertSessionHasNoErrors()->assertRedirect(route('tournaments.register', $tournament));
     expect($tournament->teams()->count())->toBe(0);
+});
+
+test('unregistering a team whose players were never used elsewhere deletes the team and both players', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+    $team = Team::factory()->create();
+    $tournament->teams()->attach($team);
+
+    $this->actingAs($user)->delete(route('tournaments.register.teams.destroy', [$tournament, $team]))
+        ->assertSessionHasNoErrors();
+
+    expect(Team::find($team->id))->toBeNull()
+        ->and(Player::find($team->player1_id))->toBeNull()
+        ->and(Player::find($team->player2_id))->toBeNull();
+});
+
+test('unregistering a team keeps a player who is still used elsewhere', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+    $team = Team::factory()->create();
+    $tournament->teams()->attach($team);
+    Tournament::factory()->create()->singlePlayers()->attach($team->player1_id);
+
+    $this->actingAs($user)->delete(route('tournaments.register.teams.destroy', [$tournament, $team]))
+        ->assertSessionHasNoErrors();
+
+    expect(Player::find($team->player1_id))->not->toBeNull()
+        ->and(Player::find($team->player2_id))->toBeNull();
+});
+
+test('unregistering a team still registered for another tournament keeps the team and its players', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+    $team = Team::factory()->create();
+    $tournament->teams()->attach($team);
+    Tournament::factory()->create()->teams()->attach($team);
+
+    $this->actingAs($user)->delete(route('tournaments.register.teams.destroy', [$tournament, $team]))
+        ->assertSessionHasNoErrors();
+
+    expect(Team::find($team->id))->not->toBeNull()
+        ->and(Player::find($team->player1_id))->not->toBeNull()
+        ->and(Player::find($team->player2_id))->not->toBeNull();
 });
 
 test('admins can register participants for any tournament', function () {

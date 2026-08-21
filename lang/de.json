@@ -238,7 +238,9 @@
     "Both players must already be registered individually for this tournament.": "Beide Spieler müssen bereits einzeln für dieses Turnier registriert sein.",
     ":player1 and :player2 joined into a team.": ":player1 und :player2 wurden zu einem Team zusammengefügt.",
     ":name unregistered.": ":name abgemeldet.",
+    ":name unregistered and removed, since they were never registered elsewhere.": ":name abgemeldet und entfernt, da nirgends sonst registriert.",
     "Team :team unregistered.": "Team :team abgemeldet.",
+    ":names removed, since they were never registered elsewhere.": ":names entfernt, da nirgends sonst registriert.",
     "Select exactly two players to join into a team.": "Wählen Sie genau zwei Spieler aus, um sie zu einem Team zusammenzufügen.",
 
     ":attribute is required.": ":attribute ist erforderlich.",

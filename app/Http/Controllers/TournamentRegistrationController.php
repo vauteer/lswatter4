@@ -141,7 +141,17 @@ class TournamentRegistrationController extends Controller
 
         $tournament->singlePlayers()->detach($player);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __(':name unregistered.', ['name' => $player->name])]);
+        $message = __(':name unregistered.', ['name' => $player->name]);
+
+        // Was only registered here, never played anywhere or paired into a
+        // team - nothing links to this player record any more, so drop the
+        // now-pointless entry instead of leaving it to accumulate.
+        if (! $player->isUsed()) {
+            $player->delete();
+            $message = __(':name unregistered and removed, since they were never registered elsewhere.', ['name' => $player->name]);
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
 
         return to_route('tournaments.register', $tournament);
     }
@@ -154,9 +164,33 @@ class TournamentRegistrationController extends Controller
         Gate::authorize('update', $tournament);
         abort_unless($tournament->registrationOpen(), 422);
 
+        $teamLabel = (string) $team;
+        $players = [$team->player1, $team->player2];
+
         $tournament->teams()->detach($team);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Team :team unregistered.', ['team' => (string) $team])]);
+        $message = __('Team :team unregistered.', ['team' => $teamLabel]);
+
+        // The pairing itself was never played and isn't registered for any
+        // other tournament any more - nothing links to this team row any
+        // more, so drop it, and with it, any player who was only ever part
+        // of this team and never registered anywhere else either.
+        if (Team::unused()->whereKey($team->id)->exists()) {
+            $team->delete();
+
+            $removedNames = collect($players)
+                ->reject(fn (Player $player) => $player->isUsed())
+                ->each(fn (Player $player) => $player->delete())
+                ->pluck('name');
+
+            if ($removedNames->isNotEmpty()) {
+                $message .= ' '.__(':names removed, since they were never registered elsewhere.', [
+                    'names' => $removedNames->implode(', '),
+                ]);
+            }
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
 
         return to_route('tournaments.register', $tournament);
     }

@@ -38,6 +38,7 @@ class TournamentResource extends JsonResource
             'modifiable' => $request->user()?->can('update', $this->resource) ?? false,
             'deletable' => $request->user()?->can('delete', $this->resource) ?? false,
             'registrationOpen' => $this->registrationOpen(),
+            'drawn' => $this->drawn(),
         ];
     }
 }

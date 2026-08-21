@@ -114,8 +114,8 @@ function toggleJoin(playerId: number, checked: boolean | 'indeterminate') {
                 :description="`${tournament.name} · ${$t('Players in total: :count', { count: String(totalPlayers) })}`"
             />
             <Button as-child variant="ghost">
-                <Link :href="show(tournament.id)">{{
-                    $t('Back to tournament')
+                <Link :href="drawn ? show(tournament.id) : index()">{{
+                    drawn ? $t('Back to tournament') : $t('Back to tournaments')
                 }}</Link>
             </Button>
         </div>

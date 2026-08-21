@@ -7,12 +7,14 @@ use App\Models\User;
 
 test('guests cannot view a tournament that has not started yet', function () {
     $tournament = Tournament::factory()->create(['start' => now()->addDay()]);
+    Fixture::factory()->create(['tournament_id' => $tournament->id, 'round' => 1]);
 
     $this->get(route('tournaments.show', $tournament))->assertForbidden();
 });
 
 test('guests can view a tournament that has already started', function () {
     $tournament = Tournament::factory()->create(['start' => now()->subDay()]);
+    Fixture::factory()->create(['tournament_id' => $tournament->id, 'round' => 1]);
 
     $this->get(route('tournaments.show', $tournament))->assertOk();
 });
@@ -41,13 +43,26 @@ test('authenticated users can view a tournament with its fixtures and standings'
     );
 });
 
-test('a tournament that has not been drawn yet defaults to round 1', function () {
+test('a tournament that has not been drawn yet has no show page', function () {
     $user = User::factory()->create();
     $tournament = Tournament::factory()->create(['rounds' => 3, 'created_by' => $user->id]);
 
-    $response = $this->actingAs($user)->get(route('tournaments.show', $tournament));
+    $this->actingAs($user)->get(route('tournaments.show', $tournament))->assertNotFound();
+});
 
-    $response->assertInertia(fn ($page) => $page->where('currentRound', 1));
+test('the show page disappears again when the draw is discarded', function () {
+    $user = User::factory()->create();
+    $tournament = Tournament::factory()->create(['created_by' => $user->id]);
+    for ($i = 0; $i < 4; $i++) {
+        $tournament->teams()->attach(Team::factory()->create());
+    }
+    $tournament->draw();
+
+    $this->actingAs($user)->get(route('tournaments.show', $tournament))->assertOk();
+
+    $tournament->discardDraw();
+
+    $this->actingAs($user)->get(route('tournaments.show', $tournament))->assertNotFound();
 });
 
 test('the show page defaults to the first round with an unscored fixture', function () {

@@ -52,11 +52,15 @@ class TournamentController extends Controller
     }
 
     /**
-     * Display the given tournament's fixtures and standings.
+     * Display the given tournament's fixtures and standings. There is
+     * nothing to show before the draw, so the page only exists once the
+     * fixtures have been drawn.
      */
     public function show(Request $request, Tournament $tournament): Response
     {
         Gate::authorize('view', $tournament);
+
+        abort_unless($tournament->drawn(), 404);
 
         $round = $request->integer('round') ?: $tournament->firstIncompleteRound();
 
@@ -69,7 +73,6 @@ class TournamentController extends Controller
                 ->orderBy('table_number')
                 ->get()),
             'canDraw' => $tournament->canDraw(),
-            'drawn' => $tournament->drawn(),
         ]);
     }
 

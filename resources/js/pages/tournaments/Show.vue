@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head, Link, setLayoutProps, usePage } from '@inertiajs/vue3';
+import { Head, Link, setLayoutProps, usePage } from '@inertiajs/vue3';
 import { Pencil, Shuffle, Trophy, UserPlus } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
@@ -62,7 +62,6 @@ const props = defineProps<{
     standings: StandingRow[];
     fixtures: { data: FixtureRow[] };
     canDraw: boolean;
-    drawn: boolean;
 }>();
 
 const page = usePage();
@@ -248,22 +247,8 @@ function rankAccent(rank: number, total: number): string {
                         {{ $t('Register participants') }}
                     </Link>
                 </Button>
-                <Form
-                    v-if="tournament.modifiable && canDraw && !drawn"
-                    v-bind="TournamentController.draw.form(tournament.id)"
-                    v-slot="{ processing }"
-                >
-                    <Button
-                        type="submit"
-                        variant="outline"
-                        :disabled="processing"
-                    >
-                        <Shuffle class="size-4" />
-                        {{ $t('Draw') }}
-                    </Button>
-                </Form>
                 <ConfirmActionDialog
-                    v-else-if="tournament.modifiable && canDraw && drawn"
+                    v-if="tournament.modifiable && canDraw"
                     :action="TournamentController.draw.form(tournament.id)"
                     :title="$t('Redraw tournament?')"
                     :description="

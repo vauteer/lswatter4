@@ -25,6 +25,7 @@ type TournamentRow = {
     private: boolean;
     modifiable: boolean;
     registrationOpen: boolean;
+    drawn: boolean;
 };
 
 type PaginatedTournaments = {
@@ -178,13 +179,19 @@ function formatStart(start: string): string {
                     >
                         <td class="px-4 py-2">
                             <Link
+                                v-if="tournament.drawn"
                                 :href="show(tournament.id)"
                                 class="font-medium hover:underline"
                             >
                                 {{ tournament.name }}
                             </Link>
+                            <span v-else class="font-medium">
+                                {{ tournament.name }}
+                            </span>
                         </td>
-                        <td class="px-4 py-2 text-muted-foreground tabular-nums">
+                        <td
+                            class="px-4 py-2 text-muted-foreground tabular-nums"
+                        >
                             {{ formatStart(tournament.start) }}
                         </td>
                         <td
@@ -207,30 +214,6 @@ function formatStart(start: string): string {
                         </td>
                         <td class="px-4 py-2">
                             <div class="flex items-center justify-end gap-1">
-                                <Tooltip>
-                                    <TooltipTrigger as-child>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon-sm"
-                                            as-child
-                                        >
-                                            <Link
-                                                :href="show(tournament.id)"
-                                                :aria-label="
-                                                    $t('Show :name', {
-                                                        name: tournament.name,
-                                                    })
-                                                "
-                                            >
-                                                <ListOrdered class="size-4" />
-                                            </Link>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>{{
-                                        $t('Show')
-                                    }}</TooltipContent>
-                                </Tooltip>
-
                                 <Tooltip
                                     v-if="
                                         tournament.modifiable &&
@@ -262,6 +245,31 @@ function formatStart(start: string): string {
                                         $t('Register')
                                     }}</TooltipContent>
                                 </Tooltip>
+
+                                <Tooltip v-if="tournament.drawn">
+                                    <TooltipTrigger as-child>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            as-child
+                                        >
+                                            <Link
+                                                :href="show(tournament.id)"
+                                                :aria-label="
+                                                    $t('Show :name', {
+                                                        name: tournament.name,
+                                                    })
+                                                "
+                                            >
+                                                <ListOrdered class="size-4" />
+                                            </Link>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{{
+                                        $t('Show')
+                                    }}</TooltipContent>
+                                </Tooltip>
+
                                 <Tooltip v-if="tournament.modifiable">
                                     <TooltipTrigger as-child>
                                         <Button

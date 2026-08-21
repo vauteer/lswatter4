@@ -12,7 +12,15 @@ import {
     ComboboxTrigger,
     ComboboxViewport,
 } from 'reka-ui';
-import { computed, ref, useTemplateRef, watch } from 'vue';
+import {
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    useTemplateRef,
+    watch,
+} from 'vue';
 import { cn } from '@/lib/utils';
 import type { SelectOption } from '@/types';
 
@@ -94,11 +102,78 @@ const handleSelect = (value: unknown) => {
     inputRef.value?.$el?.focus();
 };
 
-const handleCreateSelect = (event: Event) => {
-    event.preventDefault();
+const commitPendingCreate = () => {
+    if (!showCreateOption.value) {
+        return;
+    }
+
     newPlayerName.value = searchText.value.trim();
     selectedId.value = null;
+    emit('update:modelValue', null);
 };
+
+const handleCreateSelect = (event: Event) => {
+    event.preventDefault();
+    commitPendingCreate();
+};
+
+// Reka only highlights an item once the user has navigated with arrow keys
+// (or, inconsistently, right after the list goes from empty to non-empty -
+// see reka-ui's ComboboxInput). Typing a brand-new name and pressing Enter
+// right away usually leaves nothing highlighted, so Reka's own Enter
+// handling silently no-ops (it bails out unless the highlighted element is
+// still mounted - see reka-ui's ListboxRoot#onKeydownEnter) and the keypress
+// falls through to submit the surrounding form with empty fields. Track the
+// highlighted item's element the same way, so Enter can fall back to
+// confirming the create option in that case, without stealing Enter from an
+// item the user did arrow down to.
+const highlightedElement = ref<HTMLElement | null>(null);
+
+const handleHighlight = (item: { ref: HTMLElement } | undefined) => {
+    highlightedElement.value = item?.ref ?? null;
+};
+
+const handleEnterCapture = async (event: KeyboardEvent) => {
+    if (highlightedElement.value?.isConnected || !showCreateOption.value) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    commitPendingCreate();
+
+    // Confirming the create option consumes this Enter press instead of
+    // letting it reach the browser's native submit-on-Enter behaviour (see
+    // above), so without this the hidden inputs are correctly filled in but
+    // the user has to press Enter a second time to actually submit. Submit
+    // explicitly instead, once the hidden inputs have picked up the new
+    // value, so a single Enter both creates and registers the player.
+    await nextTick();
+    (event.target as HTMLElement | null)?.closest('form')?.requestSubmit();
+};
+
+// Reka resets the input's search text on blur (see reka-ui's ComboboxRoot
+// `resetSearchTermOnBlur`, on by default) by falling back to `displayValue`
+// of the current (still null) selection - i.e. the pending create name.
+// Nothing sets that name unless the user explicitly pressed Enter or
+// clicked the "create" option, so tabbing straight to the next field after
+// typing a brand-new name wiped it. Commit the pending name here too, so
+// tabbing to fill in a second new player doesn't lose the first.
+const handleBlur = () => {
+    commitPendingCreate();
+};
+
+// Reka's ComboboxInput sits behind several wrapper components (ListboxFilter,
+// Primitive) before reaching the native <input>, and a plain `@blur` on
+// <ComboboxInput> here does not reliably fall through that chain. Attach
+// directly to the real element instead.
+onMounted(() => {
+    inputRef.value?.$el?.addEventListener('blur', handleBlur);
+});
+
+onBeforeUnmount(() => {
+    inputRef.value?.$el?.removeEventListener('blur', handleBlur);
+});
 
 function reset() {
     selectedId.value = null;
@@ -120,6 +195,7 @@ defineExpose({
         open-on-focus
         class="relative"
         @update:model-value="handleSelect"
+        @highlight="handleHighlight"
     >
         <ComboboxAnchor
             :class="
@@ -128,6 +204,7 @@ defineExpose({
                     props.class,
                 )
             "
+            @keydown.enter.capture="handleEnterCapture"
         >
             <ComboboxInput
                 ref="inputRef"
@@ -185,7 +262,7 @@ defineExpose({
                     </ComboboxItem>
                     <ComboboxItem
                         v-if="showCreateOption"
-                        :key="searchText"
+                        :key="CREATE_NEW_VALUE"
                         :value="CREATE_NEW_VALUE"
                         :text-value="searchText"
                         class="relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm text-primary outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"

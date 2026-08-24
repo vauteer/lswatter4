@@ -19,16 +19,24 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 
         $this->hideSensitiveRequestDetails();
 
-        $isLocal = $this->app->environment('local');
+        Telescope::filter(fn (IncomingEntry $entry): bool => $this->shouldRecord($entry));
+    }
 
-        Telescope::filter(function (IncomingEntry $entry) use ($isLocal) {
-            return $isLocal ||
-                   $entry->isReportableException() ||
-                   $entry->isFailedRequest() ||
-                   $entry->isFailedJob() ||
-                   $entry->isScheduledTask() ||
-                   $entry->hasMonitoredTag();
-        });
+    /**
+     * Outside the local environment only entries pointing at a problem are
+     * kept, so a healthy site records next to nothing. Setting
+     * TELESCOPE_RECORD_EVERYTHING records all traffic there as well, which
+     * is read per entry so the switch takes effect without a redeploy.
+     */
+    protected function shouldRecord(IncomingEntry $entry): bool
+    {
+        return $this->app->environment('local')
+            || (bool) config('telescope.record_everything', false)
+            || $entry->isReportableException()
+            || $entry->isFailedRequest()
+            || $entry->isFailedJob()
+            || $entry->isScheduledTask()
+            || $entry->hasMonitoredTag();
     }
 
     /**

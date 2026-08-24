@@ -20,6 +20,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Record Everything
+    |--------------------------------------------------------------------------
+    |
+    | Outside the local environment Telescope only keeps entries that point
+    | at a problem - see TelescopeServiceProvider - so a healthy site records
+    | next to nothing. Turn this on to record all traffic for a while, e.g.
+    | while chasing a bug in production. Entries pile up quickly, so turn it
+    | off again afterwards; telescope:prune (see routes/console.php) keeps
+    | the table from growing without bound in the meantime.
+    |
+    */
+
+    'record_everything' => env('TELESCOPE_RECORD_EVERYTHING', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Telescope Domain
     |--------------------------------------------------------------------------
     |

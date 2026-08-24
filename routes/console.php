@@ -10,3 +10,8 @@ Artisan::command('inspire', function () {
 
 Schedule::command('app:backup')
     ->dailyAt('23:15');
+
+// Only ever has anything to do while TELESCOPE_RECORD_EVERYTHING is on, but
+// then the entries pile up fast, so keep no more than the last two days.
+Schedule::command('telescope:prune --hours=48')
+    ->daily();

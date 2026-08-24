@@ -86,6 +86,12 @@ Backups muss der Laravel-Scheduler laufen:
 Ein Deployment bringt `composer deploy` auf den Stand (Abhängigkeiten ohne
 Dev-Pakete, Frontend-Build, Config- und Route-Cache).
 
+Telescope zeichnet außerhalb der lokalen Umgebung nur auffällige Vorgänge auf
+– Ausnahmen, Antworten mit Status 500 und aufwärts, fehlgeschlagene Jobs und
+geplante Aufgaben. Für die Fehlersuche lässt sich mit
+`TELESCOPE_RECORD_EVERYTHING=true` vorübergehend alles aufzeichnen; die
+Einträge werden dann täglich auf die letzten 48 Stunden gekürzt.
+
 ## Entwicklung
 
 ```bash

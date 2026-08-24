@@ -4,6 +4,7 @@ import {
     Contact,
     DatabaseBackup,
     FileText,
+    Info,
     LayoutGrid,
     Telescope as TelescopeIcon,
     Trophy,
@@ -24,7 +25,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { about, dashboard } from '@/routes';
 import { index as backupsIndex } from '@/routes/backups';
 import { index as playersIndex } from '@/routes/players';
 import { index as tournamentsIndex } from '@/routes/tournaments';
@@ -88,6 +89,11 @@ const mainNavItems = computed<NavItem[]>(() => [
               },
           ]
         : []),
+    {
+        title: trans('About'),
+        href: about(),
+        icon: Info,
+    },
 ]);
 </script>
 

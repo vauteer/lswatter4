@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AboutController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FixtureController;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 // and view tournaments without signing in.
 Route::get('/', [TournamentController::class, 'index'])->name('home');
 Route::get('tournaments', [TournamentController::class, 'index'])->name('tournaments.index');
+Route::get('about', [AboutController::class, 'index'])->name('about');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

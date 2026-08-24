@@ -186,6 +186,7 @@ class TournamentRegistrationController extends Controller
             $team->delete();
 
             $removedNames = collect($players)
+                ->filter()
                 ->reject(fn (Player $player) => $player->isUsed())
                 ->each(fn (Player $player) => $player->delete())
                 ->pluck('name');

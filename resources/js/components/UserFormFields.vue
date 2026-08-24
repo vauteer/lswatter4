@@ -62,9 +62,7 @@ defineProps<{
                 value="1"
                 :default-value="user?.blocked ?? false"
             />
-            <Label for="blocked" class="font-normal">{{
-                $t('Blocked')
-            }}</Label>
+            <Label for="blocked" class="font-normal">{{ $t('Blocked') }}</Label>
         </div>
         <InputError :message="errors.blocked" />
     </div>

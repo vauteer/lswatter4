@@ -293,21 +293,23 @@ function rankAccent(rank: number, total: number): string {
                     class="border-b border-sidebar-border/70 text-left text-muted-foreground dark:border-sidebar-border"
                 >
                     <tr>
-                        <th class="px-4 py-2 text-center font-medium">
+                        <th class="px-2 py-2 text-center font-medium md:px-4">
                             {{ $t('Table') }}
                         </th>
-                        <th class="px-4 py-2 font-medium">
+                        <th
+                            class="w-full px-2 py-2 font-medium md:w-auto md:px-4"
+                        >
                             {{ $t('Pairing') }}
                         </th>
                         <th class="hidden px-4 py-2 font-medium md:table-cell">
                             {{ $t('Result') }}
                         </th>
-                        <th class="px-4 py-2 text-center font-medium">
+                        <th class="px-2 py-2 text-center font-medium md:px-4">
                             {{ $t('Games : Points') }}
                         </th>
                         <th
                             v-if="hasEditableFixtures"
-                            class="px-4 py-2 text-right font-medium"
+                            class="px-2 py-2 text-right font-medium md:px-4"
                         >
                             {{ $t('Actions') }}
                         </th>
@@ -327,10 +329,10 @@ function rankAccent(rank: number, total: number): string {
                         :key="fixture.id"
                         class="border-b border-sidebar-border/70 last:border-0 odd:bg-muted/40 dark:border-sidebar-border"
                     >
-                        <td class="px-4 py-2 text-center font-bold">
+                        <td class="px-2 py-2 text-center font-bold md:px-4">
                             {{ fixture.tableNumber }}
                         </td>
-                        <td class="px-4 py-2">
+                        <td class="w-full px-2 py-2 md:w-auto md:px-4">
                             <div
                                 class="flex items-center gap-1"
                                 :class="outcomeClass(fixture, 1)"
@@ -364,7 +366,7 @@ function rankAccent(rank: number, total: number): string {
                                 </Badge>
                             </div>
                         </td>
-                        <td class="px-4 py-2 text-center">
+                        <td class="px-2 py-2 text-center md:px-4">
                             <div class="font-bold">
                                 {{ fixture.scoreGames }}
                             </div>
@@ -372,7 +374,10 @@ function rankAccent(rank: number, total: number): string {
                                 {{ fixture.scorePoints }}
                             </div>
                         </td>
-                        <td v-if="hasEditableFixtures" class="px-4 py-2">
+                        <td
+                            v-if="hasEditableFixtures"
+                            class="px-2 py-2 md:px-4"
+                        >
                             <div class="flex items-center justify-end gap-1">
                                 <Tooltip v-if="fixture.editable">
                                     <TooltipTrigger as-child>
@@ -408,10 +413,12 @@ function rankAccent(rank: number, total: number): string {
                     class="border-b border-sidebar-border/70 text-left text-muted-foreground dark:border-sidebar-border"
                 >
                     <tr>
-                        <th class="px-4 py-2 text-center font-medium">
+                        <th class="px-2 py-2 text-center font-medium md:px-4">
                             {{ $t('Rank') }}
                         </th>
-                        <th class="px-4 py-2 font-medium">
+                        <th
+                            class="w-full px-2 py-2 font-medium md:w-auto md:px-4"
+                        >
                             {{ $t('Team') }}
                         </th>
                         <th
@@ -419,10 +426,10 @@ function rankAccent(rank: number, total: number): string {
                         >
                             {{ $t('Points') }}
                         </th>
-                        <th class="px-4 py-2 text-center font-medium">
+                        <th class="px-2 py-2 text-center font-medium md:px-4">
                             {{ $t('Difference') }}
                         </th>
-                        <th class="px-4 py-2 text-center font-medium">
+                        <th class="px-2 py-2 text-center font-medium md:px-4">
                             {{ $t('Games') }}
                         </th>
                     </tr>
@@ -446,23 +453,25 @@ function rankAccent(rank: number, total: number): string {
                     >
                         <td
                             :class="[
-                                'px-4 py-2 text-center font-bold',
+                                'px-2 py-2 text-center font-bold md:px-4',
                                 rankAccent(rank, standings.length),
                             ]"
                         >
                             {{ rank + 1 }}
                         </td>
-                        <td class="px-4 py-2 font-bold">
+                        <td
+                            class="w-full px-2 py-2 font-bold md:w-auto md:px-4"
+                        >
                             <div>{{ standing.player1 }}</div>
                             <div>{{ standing.player2 }}</div>
                         </td>
                         <td class="hidden px-4 py-2 text-center md:table-cell">
                             {{ standing.pointsWon }} : {{ standing.pointsLost }}
                         </td>
-                        <td class="px-4 py-2 text-center font-semibold">
+                        <td class="px-2 py-2 text-center font-semibold md:px-4">
                             {{ standing.pointsWon - standing.pointsLost }}
                         </td>
-                        <td class="px-4 py-2 text-center font-semibold">
+                        <td class="px-2 py-2 text-center font-semibold md:px-4">
                             {{ standing.won }} : {{ standing.lost }}
                         </td>
                     </tr>

@@ -329,7 +329,7 @@ function rankAccent(rank: number, total: number): string {
                         :key="fixture.id"
                         class="border-b border-sidebar-border/70 last:border-0 odd:bg-muted/40 dark:border-sidebar-border"
                     >
-                        <td class="px-2 py-2 text-center font-bold md:px-4">
+                        <td class="px-4 py-2 text-left font-bold md:text-center">
                             {{ fixture.tableNumber }}
                         </td>
                         <td class="w-full px-2 py-2 md:w-auto md:px-4">
@@ -339,7 +339,7 @@ function rankAccent(rank: number, total: number): string {
                             >
                                 <Trophy
                                     v-if="fixtureWinner(fixture) === 1"
-                                    class="size-3.5 shrink-0"
+                                    class="size-3.5 shrink-0 -ml-5"
                                 />
                                 {{ fixture.team1 }}
                             </div>
@@ -349,7 +349,7 @@ function rankAccent(rank: number, total: number): string {
                             >
                                 <Trophy
                                     v-if="fixtureWinner(fixture) === 2"
-                                    class="size-3.5 shrink-0"
+                                    class="size-3.5 shrink-0 -ml-5"
                                 />
                                 {{ fixture.team2 }}
                             </div>

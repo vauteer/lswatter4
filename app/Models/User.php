@@ -103,6 +103,14 @@ class User extends Authenticatable
 
         foreach ($disk->files('profile') as $path) {
             $filename = basename($path);
+
+            // Skip dotfiles: storage/app/public/profile/.gitignore is what
+            // keeps the directory in the repository, and no user row points
+            // at it, so an unfiltered sweep deletes it on the first run.
+            if (str_starts_with($filename, '.')) {
+                continue;
+            }
+
             $user = static::where('profile_image', $filename)->first();
             if ($user === null) {
                 $disk->delete($path);

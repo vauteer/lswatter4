@@ -139,3 +139,20 @@ test('correct password must be provided to delete account', function () {
 
     expect($user->fresh())->not->toBeNull();
 });
+
+test('the orphan sweep leaves the directory .gitignore alone', function () {
+    // storage/app/public/profile/.gitignore is a tracked file and is what keeps
+    // the directory in the repository. No user row points at it, so an
+    // unfiltered sweep deletes it on the first real profile update.
+    Storage::disk('public')->put(User::profileStoragePath('.gitignore'), "*\n!.gitignore\n");
+    Storage::disk('public')->put(User::profileStoragePath('orphan.jpg'), 'nobody points here');
+
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->patch(route('profile.update'), ['name' => 'New Name', 'email' => $user->email])
+        ->assertSessionHasNoErrors();
+
+    Storage::disk('public')->assertExists(User::profileStoragePath('.gitignore'));
+    Storage::disk('public')->assertMissing(User::profileStoragePath('orphan.jpg'));
+});

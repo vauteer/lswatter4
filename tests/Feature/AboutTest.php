@@ -10,8 +10,8 @@ test('guests can view the about page', function () {
     $response->assertInertia(fn ($page) => $page
         ->component('About')
         ->where('appName', config('app.name'))
-        ->where('phpVersion', PHP_VERSION)
-        ->has('laravelVersion'));
+        ->where('phpVersion', PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION)
+        ->where('laravelVersion', explode('.', app()->version())[0]));
 });
 
 test('signed in users can view the about page', function () {

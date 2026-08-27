@@ -300,5 +300,6 @@
     "Runs the automated tests": "Führt die automatischen Tests aus",
     "Keep the code formatted consistently": "Halten den Code einheitlich formatiert",
     "Insight into requests, queries and jobs": "Einblick in Anfragen, Datenbankabfragen und Jobs",
+    "Wrote a good part of this code": "Hat einen guten Teil dieses Codes geschrieben",
     "Reads the application log in the browser": "Liest das Anwendungsprotokoll im Browser"
 }

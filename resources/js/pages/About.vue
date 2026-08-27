@@ -1,7 +1,36 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ExternalLink, Mail } from '@lucide/vue';
+import {
+    Bell,
+    Blocks,
+    CloudUpload,
+    ExternalLink,
+    FlaskConical,
+    Languages,
+    Mail,
+    Printer,
+    Rocket,
+    ScrollText,
+    ShieldCheck,
+    Signpost,
+    Sparkles,
+    Telescope,
+} from '@lucide/vue';
+import type { LucideIcon } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
+import {
+    siClaude,
+    siInertia,
+    siLaravel,
+    siLucide,
+    siPhp,
+    siTailwindcss,
+    siVite,
+    siVuedotjs,
+    siVueuse,
+} from 'simple-icons';
+import type { SimpleIcon } from 'simple-icons';
+import CreditIcon from '@/components/CreditIcon.vue';
 import Heading from '@/components/Heading.vue';
 import { about } from '@/routes';
 
@@ -9,6 +38,7 @@ type Credit = {
     name: string;
     description: string;
     href: string;
+    icon: LucideIcon | SimpleIcon;
 };
 
 type CreditGroup = {
@@ -43,11 +73,13 @@ const creditGroups: CreditGroup[] = [
                     'The PHP framework this application is built on',
                 ),
                 href: 'https://laravel.com',
+                icon: siLaravel,
             },
             {
                 name: `PHP ${props.phpVersion}`,
                 description: trans('The language the server side runs on'),
                 href: 'https://www.php.net',
+                icon: siPhp,
             },
             {
                 name: 'Inertia.js',
@@ -55,6 +87,7 @@ const creditGroups: CreditGroup[] = [
                     'Connects the Laravel backend to the Vue frontend',
                 ),
                 href: 'https://inertiajs.com',
+                icon: siInertia,
             },
             {
                 name: 'Laravel Fortify',
@@ -62,21 +95,25 @@ const creditGroups: CreditGroup[] = [
                     'Login, password reset and password confirmation',
                 ),
                 href: 'https://laravel.com/docs/fortify',
+                icon: ShieldCheck,
             },
             {
                 name: 'Laravel Wayfinder',
                 description: trans('Type-safe route helpers for the frontend'),
                 href: 'https://github.com/laravel/wayfinder',
+                icon: Signpost,
             },
             {
                 name: 'FPDF',
                 description: trans('Generates the printable table lists'),
                 href: 'https://www.fpdf.org',
+                icon: Printer,
             },
             {
                 name: 'Flysystem',
                 description: trans('Stores the database backups off-site'),
                 href: 'https://flysystem.thephpleague.com',
+                icon: CloudUpload,
             },
         ],
     },
@@ -89,11 +126,13 @@ const creditGroups: CreditGroup[] = [
                     'The component framework behind the user interface',
                 ),
                 href: 'https://vuejs.org',
+                icon: siVuedotjs,
             },
             {
                 name: 'Tailwind CSS',
                 description: trans('The styling of every page'),
                 href: 'https://tailwindcss.com',
+                icon: siTailwindcss,
             },
             {
                 name: 'Reka UI',
@@ -101,16 +140,19 @@ const creditGroups: CreditGroup[] = [
                     'Accessible building blocks for menus, dialogs and more',
                 ),
                 href: 'https://reka-ui.com',
+                icon: Blocks,
             },
             {
                 name: 'Lucide',
                 description: trans('The icon set'),
                 href: 'https://lucide.dev',
+                icon: siLucide,
             },
             {
                 name: 'Vue Sonner',
                 description: trans('The toast notifications'),
                 href: 'https://vue-sonner.vercel.app',
+                icon: Bell,
             },
             {
                 name: 'laravel-vue-i18n',
@@ -118,16 +160,19 @@ const creditGroups: CreditGroup[] = [
                     'Brings the German translations to the frontend',
                 ),
                 href: 'https://github.com/xiCO2k/laravel-vue-i18n',
+                icon: Languages,
             },
             {
                 name: 'VueUse',
                 description: trans('Utilities for Vue components'),
                 href: 'https://vueuse.org',
+                icon: siVueuse,
             },
             {
                 name: 'Vite',
                 description: trans('Bundles the frontend assets'),
                 href: 'https://vite.dev',
+                icon: siVite,
             },
         ],
     },
@@ -140,26 +185,37 @@ const creditGroups: CreditGroup[] = [
                     'The starting point this application grew from',
                 ),
                 href: 'https://github.com/laravel/vue-starter-kit',
+                icon: Rocket,
             },
             {
                 name: 'Pest',
                 description: trans('Runs the automated tests'),
                 href: 'https://pestphp.com',
+                icon: FlaskConical,
             },
             {
                 name: 'Laravel Pint, ESLint & Prettier',
                 description: trans('Keep the code formatted consistently'),
                 href: 'https://laravel.com/docs/pint',
+                icon: Sparkles,
             },
             {
                 name: 'Laravel Telescope',
                 description: trans('Insight into requests, queries and jobs'),
                 href: 'https://laravel.com/docs/telescope',
+                icon: Telescope,
+            },
+            {
+                name: 'Claude Code',
+                description: trans('Wrote a good part of this code'),
+                href: 'https://claude.com/claude-code',
+                icon: siClaude,
             },
             {
                 name: 'Log Viewer',
                 description: trans('Reads the application log in the browser'),
                 href: 'https://log-viewer.opcodes.io',
+                icon: ScrollText,
             },
         ],
     },
@@ -222,21 +278,28 @@ const creditGroups: CreditGroup[] = [
                 <li
                     v-for="credit in group.items"
                     :key="credit.name"
-                    class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
+                    class="flex items-start gap-3 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
                 >
-                    <a
-                        class="flex w-fit items-center gap-1.5 font-medium underline-offset-4 hover:underline"
-                        :href="credit.href"
-                        target="_blank"
-                        rel="noopener"
-                    >
-                        {{ credit.name }}
-                        <ExternalLink class="size-3.5 shrink-0" />
-                    </a>
+                    <CreditIcon
+                        :icon="credit.icon"
+                        class="mt-0.5 size-5 shrink-0"
+                    />
 
-                    <p class="mt-1 text-sm text-muted-foreground">
-                        {{ credit.description }}
-                    </p>
+                    <div>
+                        <a
+                            class="flex w-fit items-center gap-1.5 font-medium underline-offset-4 hover:underline"
+                            :href="credit.href"
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            {{ credit.name }}
+                            <ExternalLink class="size-3.5 shrink-0" />
+                        </a>
+
+                        <p class="mt-1 text-sm text-muted-foreground">
+                            {{ credit.description }}
+                        </p>
+                    </div>
                 </li>
             </ul>
         </section>

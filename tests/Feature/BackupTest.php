@@ -23,7 +23,7 @@ afterEach(function () {
 
 function createBackupFile(CarbonInterface $date): string
 {
-    $filename = 'testdb_'.$date->format(Backup::DATE_FORMAT).'.sql.gz';
+    $filename = 'testdb_'.$date->format(Backup::DATE_FORMAT).'_utc.sql.gz';
     File::put(Backup::path($filename), 'dump');
 
     return $filename;
@@ -33,7 +33,7 @@ test('the filename is composed of the database prefix and a timestamp', function
     Carbon::setTestNow('2026-07-15 09:30:00');
 
     expect(Backup::prefix())->toBe('testdb_')
-        ->and(Backup::makeFilename())->toBe('testdb_2026_07_15_09_30_00.sql.gz');
+        ->and(Backup::makeFilename())->toBe('testdb_2026_07_15_09_30_00_utc.sql.gz');
 });
 
 test('path resolves inside the configured backup directory', function () {
@@ -44,7 +44,7 @@ test('path resolves inside the configured backup directory', function () {
 test('all lists backups newest first and ignores foreign files', function () {
     $oldest = createBackupFile(now()->subDays(3));
     $newest = createBackupFile(now()->subHours(2));
-    File::put(Backup::path('otherdb_2026_01_01_00_00_00.sql.gz'), 'foreign');
+    File::put(Backup::path('otherdb_2026_01_01_00_00_00_utc.sql.gz'), 'foreign');
     File::put(Backup::path('testdb_not_a_date.sql.gz'), 'invalid');
 
     $backups = Backup::all();

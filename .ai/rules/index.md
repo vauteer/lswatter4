@@ -6,3 +6,4 @@ Before planning or editing, find the row whose globs match the file's path and r
 | --- | --- |
 | app/Http/Controllers/TournamentController.php | .ai/rules/controllers.md |
 | routes/web.php | .ai/rules/routes.md |
+| app/Backup.php | .ai/rules/app.md |

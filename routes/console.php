@@ -19,3 +19,8 @@ Schedule::command('app:backup')
 // then the entries pile up fast, so keep no more than the last two days.
 Schedule::command('telescope:prune --hours=48')
     ->daily();
+
+// 05:00 UTC is early morning in Germany, so the digest is waiting rather
+// than arriving during the day.
+Schedule::command('app:mail-errors')
+    ->dailyAt('05:00');

@@ -1,5 +1,6 @@
 <?php
 
+use Carbon\CarbonInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +45,18 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Replace the application log with the given content.
+ */
+function writeLog(string $content): void
 {
-    // ..
+    file_put_contents(storage_path('logs/laravel.log'), $content);
+}
+
+/**
+ * One opening line of a log entry, as Monolog writes it.
+ */
+function logEntry(CarbonInterface $at, string $level, string $message): string
+{
+    return "[{$at->format('Y-m-d H:i:s')}] production.{$level}: {$message}\n";
 }

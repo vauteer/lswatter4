@@ -46,6 +46,7 @@ test('users can download the table lists pdf for a tournament they can view', fu
 
     $response->assertOk();
     $response->assertHeader('Content-Type', 'application/pdf');
+    expect($response->getContent())->toStartWith('%PDF-');
 });
 
 test('users cannot download the table lists pdf for a tournament they cannot view', function () {

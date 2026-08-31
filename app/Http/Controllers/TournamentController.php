@@ -106,7 +106,7 @@ class TournamentController extends Controller
 
         $filename = "{$tournament->name} - Tischlisten Runde {$round}.pdf";
 
-        return new HttpResponse($tournament->tableLists($round)->Output(), 200, [
+        return new HttpResponse($tournament->tableLists($round)->Output('S'), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => HeaderUtils::makeDisposition(
                 HeaderUtils::DISPOSITION_INLINE,

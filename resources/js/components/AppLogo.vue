@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import logo from '@/images/lswatter4.svg';
+import iconLogo from '@/images/lswatter4-icon.svg';
+import fullLogo from '@/images/lswatter4.svg';
+
+withDefaults(
+    defineProps<{
+        iconOnly?: boolean;
+    }>(),
+    {
+        iconOnly: false,
+    },
+);
 </script>
 
 <template>
     <img
-        :src="logo"
+        :src="iconOnly ? iconLogo : fullLogo"
         alt="LSWatter 4 Logo"
         class="block h-8 w-auto dark:brightness-75 dark:invert"
     />

@@ -34,7 +34,11 @@ import type { NavItem } from '@/types';
 
 const page = usePage();
 
-const { setOpenMobile } = useSidebar();
+const { isMobile, setOpenMobile, state } = useSidebar();
+
+const showIconOnlyLogo = computed(
+    () => state.value === 'collapsed' && !isMobile.value,
+);
 
 // Closes the mobile sidebar sheet after any navigation, so picking a menu
 // item doesn't leave it covering the page it just opened.
@@ -110,7 +114,7 @@ const mainNavItems = computed<NavItem[]>(() => [
                                     : tournamentsIndex()
                             "
                         >
-                            <AppLogo />
+                            <AppLogo :icon-only="showIconOnlyLogo" />
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
